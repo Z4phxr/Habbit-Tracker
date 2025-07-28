@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sleep Log</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+<div class="wrapper">
+    {% include "menu.html" %}
+    <div class="navigation" role="navigation" aria-label="Week navigation">
+        <img src="{% static 'images/arrow_l.png' %}" alt="Previous week" class="nav-arrow" onclick="navigateTo('{{ prev_start|date:'Y-m-d' }}')" />
+        <div class="week-display">
+            {{ days.0|date:"d M Y" }} - {{ days|last|date:"d M Y" }}
+        </div>
+        <img src="{% static 'images/arrow_r.png' %}" alt="Next week" class="nav-arrow" onclick="navigateTo('{{ next_start|date:'Y-m-d' }}')" />
+    </div>
+    <div class="sleep-timeline-container">
+        <table class="week-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for hour in hour_labels %}
+                        <th class="hour-label">{{ hour }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day, blocks, sleep_time in zipped_days_blocks %}
+                    <tr>
+                        <td class="day-label">{{ day|date:"D, d.m" }}</td>
+                        {% for block in blocks %}
+                            <td>
+                                <div class="block {% if block.slept %}slept{% endif %}"
+                                     {% if block.slept %}style="background: {{ button_gradient }};"{% endif %}></div>
+                            </td>
+                        {% endfor %}
+                        <td>{{ sleep_time }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    function navigateTo(dateStr) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('week', dateStr);
+        window.location.href = url.toString();
+    }
+</script>
+</body>
+</html>

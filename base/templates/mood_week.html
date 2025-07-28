@@ -1,0 +1,50 @@
+{% load static %}
+{% load mood_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mood Log – Week View</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+<div class="wrapper">
+    {% include "menu.html" %}
+    <div class="navigation" role="navigation" aria-label="Week navigation">
+        <img src="{% static 'images/arrow_l.png' %}" alt="Previous week" class="nav-arrow" onclick="navigateTo('{{ prev_week }}')" />
+        <div class="week-display">
+            {{ week_days.0|date:"d M Y" }} – {{ week_days|last|date:"d M Y" }}
+        </div>
+        <img src="{% static 'images/arrow_r.png' %}" alt="Next week" class="nav-arrow" onclick="navigateTo('{{ next_week }}')" />
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 30px;">
+        <div style="display: flex; justify-content: center; align-items: flex-end; margin-bottom: 6px; gap: 8px;">
+            {% for day, mood_log in zipped_days_moods %}
+                <div style="width:48px; text-align:center; font-size:0.85rem; color:#4a5a6a; font-weight:500;">{{ day|date:"D" }}<br>{{ day|date:"d.m" }}</div>
+            {% endfor %}
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+            {% for day, mood_log in zipped_days_moods %}
+                {% if mood_log %}
+                    <div class="block" style="width:48px; height:48px; font-size:1.1rem; font-weight:600; display:flex; align-items:center; justify-content:center; border-radius:8px; color:white; background: {{ mood_log.mood|mood_color }};">
+                        {{ mood_log.mood }}
+                    </div>
+                {% else %}
+                    <div class="block" style="width:48px; height:48px; font-size:1.1rem; font-weight:600; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#bbb; background: #e0e0e0;">
+                        –
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script>
+function navigateTo(dateStr) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('week', dateStr);
+    window.location.href = url.toString();
+}
+</script>
+</body>
+</html>

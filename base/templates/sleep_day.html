@@ -1,0 +1,237 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sleep log</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+<div class="wrapper">
+    {% include "menu.html" %}
+
+    <h2 class="centered-heading">How was your sleep today?</h2>
+    <div class="navigation" role="navigation" aria-label="Day navigation">
+            <img src="{% static 'images/arrow_l.png' %}" alt="Previous day" class="nav-arrow" onclick="navigateTo('{{ prev_start|date:'Y-m-d' }}')" />
+            <div class="date-display">{{ days.0|date:"l, j F Y" }}</div>
+            <img src="{% static 'images/arrow_r.png' %}" alt="Next day" class="nav-arrow" onclick="navigateTo('{{ next_start|date:'Y-m-d' }}')" />
+        </div>
+
+    <div class="sleep-timeline-container">
+        <div class="hour-line" id="hour-line">
+            {% for hour in hour_labels %}
+                <div class="hour">{{ hour }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="timeline" id="timeline">
+            {% for block in blocks %}
+                <div class="block {% if block.slept %}slept{% endif %}"
+                     data-index="{{ forloop.counter0 }}"
+                     data-label="{{ block.label }}"
+                     {% if block.slept %}style="background: {{ button_gradient }}; color: white;"{% endif %}>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-submit">
+            <button id="save_sleep" class="form-button" style="background: {{ button_gradient }};">Save</button>
+            <button id="delete_sleep" class="form-button" style="background: {{ button_gradient }};">Delete</button>
+            {% if sleep_time_str %}
+                <div id="sleep_summary">Saved sleep time: {{ sleep_time_str }}</div>
+            {% endif %}
+            <p id="selection_status"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isDragging = false;
+    let startIdx = null;
+    let endIdx = null;
+
+    const blocks = document.querySelectorAll(".block");
+    const status = document.getElementById("selection_status");
+    const buttonGradient = "{{ button_gradient }}";
+
+    blocks.forEach(block => {
+        block.addEventListener("mousedown", e => {
+            isDragging = true;
+            startIdx = parseInt(block.dataset.index);
+            endIdx = startIdx;
+            updateHighlight();
+            e.preventDefault();
+        });
+
+        block.addEventListener("mouseover", e => {
+            if (isDragging) {
+                endIdx = parseInt(block.dataset.index);
+                updateHighlight();
+            }
+        });
+    });
+
+    document.addEventListener("mouseup", () => {
+        if (isDragging) {
+            isDragging = false;
+            showStatus();
+        }
+    });
+
+    function updateHighlight() {
+        const [from, to] = [startIdx, endIdx].sort((a, b) => a - b);
+        blocks.forEach((b, i) => {
+            if (i >= from && i <= to) {
+                b.classList.add("slept");
+                b.style.background = buttonGradient;
+                b.style.color = "white";
+            } else {
+                b.classList.remove("slept");
+                b.style.background = "";
+                b.style.color = "";
+            }
+        });
+    }
+
+    function showStatus() {
+        if (startIdx === null || endIdx === null) return;
+
+        const [from, to] = [startIdx, endIdx].sort((a, b) => a - b);
+        const startLabel = blocks[from].dataset.label;
+
+        function addHour(label) {
+            let [hour, minute] = label.split(':').map(Number);
+            hour = (hour + 1) % 24;
+            return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        }
+
+        const endLabel = addHour(blocks[to].dataset.label);
+        status.textContent = `Selected range: ${startLabel} – ${endLabel}`;
+    }
+
+    document.getElementById("save_sleep").addEventListener("click", async () => {
+        if (startIdx === null || endIdx === null) {
+            status.textContent = "❌ Select a sleep range.";
+            return;
+        }
+
+        // Get the displayed date from the page context
+        // Example: "28 Jul 2025"
+        const currentDateStr = "{{ current_date }}";
+        // Parse to JS Date
+        const [day, monthStr, year] = currentDateStr.split(" ");
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames.indexOf(monthStr);
+        const baseDate = new Date(parseInt(year), month, parseInt(day));
+
+        // Get start and end labels from blocks
+        const startLabel = blocks[startIdx].dataset.label;
+        const endLabel = blocks[endIdx].dataset.label;
+
+        // Helper to create a Date from baseDate and label
+        function dateWithLabel(date, label) {
+            let [hour, minute] = label.split(':').map(Number);
+            let d = new Date(date);
+            d.setHours(hour, minute, 0, 0);
+            return d;
+        }
+
+        // Start time
+        const startDate = dateWithLabel(baseDate, startLabel);
+
+        // End time: add 1 hour to the last block's label
+        let [endHour, endMinute] = endLabel.split(':').map(Number);
+        endHour = (endHour + 1) % 24;
+        const endDate = new Date(baseDate);
+        endDate.setHours(endHour, endMinute, 0, 0);
+
+        // If endHour < startHour, it means the sleep ended next day
+        if (endHour <= parseInt(startLabel.split(':')[0])) {
+            endDate.setDate(endDate.getDate() + 1);
+        }
+
+        // Convert to UTC ISO string
+        const payload = {
+            start: toLocalISOString(startDate),
+            end: toLocalISOString(endDate)
+        };
+
+        fetch("/api/sleep/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.duration) {
+                status.textContent = "Sleep saved!";
+                // Update sleep summary immediately
+                const summary = document.getElementById("sleep_summary");
+                if (summary) {
+                    summary.textContent = `Saved sleep time: ${data.duration}`;
+                } else {
+                    // If not present, create and insert it
+                    const newSummary = document.createElement("div");
+                    newSummary.id = "sleep_summary";
+                    newSummary.textContent = `Saved sleep time: ${data.duration}`;
+                    newSummary.style.textAlign = "center";
+                    newSummary.style.marginTop = "10px";
+                    newSummary.style.fontSize = "1rem";
+                    newSummary.style.fontWeight = "600";
+                    document.querySelector(".form-submit").insertBefore(newSummary, status);
+                }
+            } else {
+                status.textContent = "Save error.";
+            }
+        })
+        .catch(() => {
+            status.textContent = "API connection error.";
+        });
+    });
+
+    document.getElementById("delete_sleep").addEventListener("click", async () => {
+        // Get the displayed date in YYYY-MM-DD format
+        const currentDateStr = "{{ current_date }}";
+        const [day, monthStr, year] = currentDateStr.split(" ");
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames.indexOf(monthStr) + 1;
+        const dateParam = `${year}-${month.toString().padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+        fetch(`/api/sleep/delete_day/?date=${dateParam}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.deleted > 0) {
+                status.textContent = `Deleted ${data.deleted} sleep log(s) for this day.`;
+                setTimeout(() => location.reload(), 800);
+            } else {
+                status.textContent = "No sleep logs found for this day.";
+            }
+        })
+        .catch(() => {
+            status.textContent = "API connection error.";
+        });
+    });
+
+    function toLocalISOString(date) {
+        const pad = n => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
+    }
+
+    function navigateTo(dateStr) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('start_date', dateStr);
+        window.location.href = url.toString();
+    }
+</script>
+</body>
+</html>

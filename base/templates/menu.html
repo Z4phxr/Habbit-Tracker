@@ -1,0 +1,13 @@
+<div class="top-bar">
+    <div class="left-buttons">
+        <a href="{% url 'edit_habits' %}" class="view-button" style="background: {{ button_gradient }};">✏️ Edit</a>
+        <a href="{% url 'tracker' section='habits' period=active_period|default:'week' %}" class="view-button {% if active_section == 'habits' %}active{% endif %}" style="background: {{ button_gradient }};">🌳 Habits</a>
+        <a href="{% url 'tracker' section='sleep' period=active_period|default:'week' %}" class="view-button {% if active_section == 'sleep' %}active{% endif %}" style="background: {{ button_gradient }};">🌙 Sleep</a>
+        <a href="{% url 'tracker' section='mood' period=active_period|default:'week' %}" class="view-button {% if active_section == 'mood' %}active{% endif %}" style="background: {{ button_gradient }};">😌 Mood</a>
+    </div>
+    <div class="right-buttons">
+        <a href="{% url 'tracker' section=active_section|default:'habits' period='day' %}" class="view-button {% if active_period == 'day' %}active{% endif %}" style="background: {{ button_gradient }};">Day</a>
+        <a href="{% url 'tracker' section=active_section|default:'habits' period='week' %}" class="view-button {% if active_period == 'week' %}active{% endif %}" style="background: {{ button_gradient }};">Week</a>
+        <a href="{% url 'tracker' section=active_section|default:'habits' period='month' %}" class="view-button {% if active_period == 'month' %}active{% endif %}" style="background: {{ button_gradient }};">Month</a>
+    </div>
+</div>

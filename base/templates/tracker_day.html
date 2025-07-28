@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Habit Tracker – Today</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+   <div class="wrapper">
+        {% include "menu.html" %}
+        <h1>{{motto}}</h1>
+
+        <div class="navigation" role="navigation" aria-label="Day navigation">
+            <img src="{% static 'images/arrow_l.png' %}" alt="Previous day" class="nav-arrow" onclick="navigateTo('{{ prev_start|date:'Y-m-d' }}')" />
+            <div class="date-display">{{ days.0|date:"l, j F Y" }}</div>
+            <img src="{% static 'images/arrow_r.png' %}" alt="Next day" class="nav-arrow" onclick="navigateTo('{{ next_start|date:'Y-m-d' }}')" />
+        </div>
+
+        <div class="habits-list">
+            {% for habit in habits %}
+                <div class="habit-item"
+                     data-habit="{{ habit.id }}"
+                     data-date="{{ days.0|date:'Y-m-d' }}"
+                     onclick="toggleDone(this)">
+                    {{ habit.name }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        const logDict = {{ log_dict_json|safe }};
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".habit-item").forEach(el => {
+                const key = `${el.dataset.habit}-${el.dataset.date}`;
+                if (logDict[key]) {
+                    el.classList.add("done");
+                }
+            });
+        });
+
+        function toggleDone(el) {
+            const habitId = el.dataset.habit;
+            const date = el.dataset.date;
+
+            el.classList.toggle("done");
+
+            fetch("/api/habits/toggle/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ habit_id: habitId, date: date })
+            }).then(response => {
+                if (!response.ok) {
+                    console.error("Failed to toggle habit log");
+                }
+            }).catch(err => {
+                console.error(err);
+            });
+        }
+
+        function navigateTo(dateStr) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('start_date', dateStr);
+            url.searchParams.set('view_mode', 'day');
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

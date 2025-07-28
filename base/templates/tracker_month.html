@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Habit Tracker – Month</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <style>
+        .cell-month.active {
+            background: {{ button_gradient }};
+        }
+    </style>
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+    <div class="wrapper">
+        {% include "menu.html" %}
+
+        <div class="navigation-month" role="navigation" aria-label="Month navigation">
+            <img src="{% static 'images/arrow_l.png' %}" alt="Previous month" class="nav-arrow-month" onclick="navigateTo('{{ prev_start|date:'Y-m-d' }}')" />
+            <div class="month-display">{{ days.0|date:"F Y" }}</div>
+            <img src="{% static 'images/arrow_r.png' %}" alt="Next month" class="nav-arrow-month" onclick="navigateTo('{{ next_start|date:'Y-m-d' }}')" />
+        </div>
+
+        <div class="table-container-month">
+            <table class="table-month">
+                <thead>
+                    <tr>
+                        <th class="th-month" style="min-width: 120px;"><div>Habit</div></th>
+                        {% for day in days %}
+                            <th class="th-month"><div>{{ day|date:"d/m" }}</div></th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for habit in habits %}
+                        <tr>
+                            <td class="td-month">{{ habit.name }}</td>
+                            {% for day in days %}
+                                <td class="td-month">
+                                    <div class="cell-month"
+                                         data-habit="{{ habit.id }}"
+                                         data-date="{{ day|date:'Y-m-d' }}"
+                                         onclick="toggleCell(this)"></div>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const logDict = {{ log_dict_json|safe }};
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const cells = document.querySelectorAll(".cell-month");
+            cells.forEach(cell => {
+                const key = `${cell.dataset.habit}-${cell.dataset.date}`;
+                if (logDict[key]) {
+                    cell.classList.add("active");
+                }
+            });
+        });
+
+        function toggleCell(el) {
+            const habitId = el.dataset.habit;
+            const date = el.dataset.date;
+            el.classList.toggle("active");
+
+            fetch("/api/habits/toggle/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ habit_id: habitId, date: date })
+            }).then(res => {
+                if (!res.ok) console.error("Błąd zapisu logu");
+            }).catch(console.error);
+        }
+
+        function navigateTo(dateStr) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('start_date', dateStr);
+            url.searchParams.set('view_mode', 'month');
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

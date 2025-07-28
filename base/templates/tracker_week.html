@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Habit Tracker – Week</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <style>
+        .cell.active {
+            background: {{ button_gradient }};
+        }
+        .week-display {
+            font-weight: 600;
+            color: #4a5a6a;
+            min-width: 220px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+<div class="wrapper">
+    {% include "menu.html" %}
+    <div class="navigation" role="navigation" aria-label="Week navigation">
+        <img src="{% static 'images/arrow_l.png' %}" alt="Previous week" class="nav-arrow" onclick="navigateTo('{{ prev_start|date:'Y-m-d' }}')" />
+        <div class="week-display">
+            {{ days.0|date:"d M Y" }} - {{ days|last|date:"d M Y" }}
+        </div>
+        <img src="{% static 'images/arrow_r.png' %}" alt="Next week" class="nav-arrow" onclick="navigateTo('{{ next_start|date:'Y-m-d' }}')" />
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Habit</th>
+                {% for day in days %}
+                    <th>
+                        <div>{{ day|date:"D" }}</div>
+                        <div>{{ day|date:"d/m" }}</div>
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for habit in habits %}
+                <tr>
+                    <td>{{ habit.name }}</td>
+                    {% for day in days %}
+                        <td>
+                            <div class="cell"
+                                 data-habit="{{ habit.id }}"
+                                 data-date="{{ day|date:'Y-m-d' }}"
+                                 onclick="toggleCell(this)">
+                            </div>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const logDict = {{ log_dict_json|safe }};
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".cell").forEach(cell => {
+            const key = `${cell.dataset.habit}-${cell.dataset.date}`;
+            if (logDict[key]) cell.classList.add("active");
+        });
+    });
+
+    function toggleCell(elem) {
+        const habitId = elem.dataset.habit;
+        const date = elem.dataset.date;
+        elem.classList.toggle('active');
+
+        fetch("/api/habits/toggle/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({ habit_id: habitId, date: date })
+        }).then(res => {
+            if (!res.ok) console.error("Failed to save habit log");
+        }).catch(console.error);
+    }
+
+    function navigateTo(startDate) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('start_date', startDate);
+        url.searchParams.set('view_mode', 'week');
+        window.location.href = url.toString();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% load static %}
+{% load mood_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mood Log – Month View</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+<div class="wrapper">
+    {% include "menu.html" %}
+    <div class="navigation-month" role="navigation" aria-label="Month navigation">
+        <img src="{% static 'images/arrow_l.png' %}" alt="Previous month" class="nav-arrow-month" onclick="navigateTo('{{ prev_month }}')" />
+        <div class="month-display">{{ month_name }}</div>
+        <img src="{% static 'images/arrow_r.png' %}" alt="Next month" class="nav-arrow-month" onclick="navigateTo('{{ next_month }}')" />
+    </div>
+
+    <div style="max-width: 480px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 8px;">
+            {% for wd in weekday_names %}
+                <div style="text-align:center; font-size:0.9rem; color:#4a5a6a; font-weight:600;">{{ wd }}</div>
+            {% endfor %}
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+            {% for _ in "0"|make_list %}
+                {% for i in "1234567"|make_list %}{% if forloop.counter0 < month_start_empty_slots %}<div></div>{% endif %}{% endfor %}
+            {% endfor %}
+            {% for day, mood_log in zipped_days_moods %}
+                {% if mood_log %}
+                    <div class="block" style="width:48px; height:48px; font-size:1.1rem; font-weight:600; display:flex; align-items:center; justify-content:center; border-radius:8px; color:white; background: {{ mood_log.mood|mood_color }};">
+                        {{ mood_log.mood }}
+                    </div>
+                {% else %}
+                    <div class="block" style="width:48px; height:48px; font-size:1.1rem; font-weight:600; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#bbb; background: #e0e0e0;">
+                        –
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script>
+function navigateTo(dateStr) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('month', dateStr);
+    window.location.href = url.toString();
+}
+</script>
+</body>
+</html>

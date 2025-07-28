@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>All Habits</title>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+  <div class="wrapper">
+    {% include "menu.html" %}
+    <h1>All Habits</h1>
+     <div class="add-form">
+      <input type="text" id="habit-name" placeholder="New habit name" />
+      <button onclick="addHabit()" style="background: {{ button_gradient }};">Add Habit</button>
+    </div>
+
+    <h2 class="section-title">Active Habits</h2>
+    <div class="habits-list" id="active-habit-list">
+      <p>Loading active habits...</p>
+    </div>
+
+    <h2 class="section-title">Archived Habits</h2>
+    <div class="habits-list archived" id="archived-habit-list">
+      <p>Loading archived habits...</p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "/api/habits/";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchHabits();
+    });
+
+    // Fetch and display habits
+    function fetchHabits() {
+      fetch(API_BASE)
+        .then(response => {
+          if (!response.ok) throw new Error("Failed to load habits");
+          return response.json();
+        })
+        .then(data => {
+          const activeList = document.getElementById("active-habit-list");
+          const archivedList = document.getElementById("archived-habit-list");
+          activeList.innerHTML = "";
+          archivedList.innerHTML = "";
+
+          if (data.length === 0) {
+            activeList.innerHTML = "<p>No active habits found.</p>";
+            archivedList.innerHTML = "<p>No archived habits found.</p>";
+            return;
+          }
+
+          let hasActive = false;
+          let hasArchived = false;
+
+          data.forEach(habit => {
+            const row = document.createElement("div");
+            row.className = "habit-row";
+            row.id = `habit-${habit.id}`;
+            row.innerHTML = `
+              <div class="habit-name" id="name-${habit.id}">${habit.name}</div>
+              <input type="text" class="edit-input" id="input-${habit.id}" value="${habit.name}" />
+              <div>
+                <button class="habit-button edit-button" style="background: {{ button_gradient }};" onclick="enableEdit(${habit.id})">Edit</button>
+                <button class="habit-button save-button" style="background: {{ button_gradient }}; display:none;" onclick="saveEdit(${habit.id})">Save</button>
+                <button class="habit-button archive-button" style="background: {{ button_gradient }};" onclick="toggleArchive(${habit.id})">
+                  ${habit.archived ? "Unarchivize" : "Archivize"}
+                </button>
+                <button class="delete-button habit-button" onclick="deleteHabit(${habit.id})">Delete</button>
+              </div>
+            `;
+
+            const input = row.querySelector(`#input-${habit.id}`);
+            input.addEventListener("keydown", function(event) {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveEdit(habit.id);
+              }
+            });
+
+            if (habit.archived) {
+              hasArchived = true;
+              archivedList.appendChild(row);
+            } else {
+              hasActive = true;
+              activeList.appendChild(row);
+            }
+          });
+
+          if (!hasActive) activeList.innerHTML = "<p>No active habits found.</p>";
+          if (!hasArchived) archivedList.innerHTML = "<p>No archived habits found.</p>";
+        })
+        .catch(error => {
+          document.getElementById("active-habit-list").innerHTML = "<p>Error loading habits.</p>";
+          document.getElementById("archived-habit-list").innerHTML = "<p>Error loading habits.</p>";
+          console.error(error);
+        });
+    }
+
+    // Add a new habit
+    function addHabit() {
+      const nameInput = document.getElementById("habit-name");
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      fetch(API_BASE + "add_habit/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ name: name })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to add habit");
+        return res.json();
+      })
+      .then(() => {
+        nameInput.value = "";
+        fetchHabits();
+      })
+      .catch(err => {
+        alert("Error adding habit");
+        console.error(err);
+      });
+    }
+
+    // Delete a habit
+    function deleteHabit(id) {
+      if (!confirm("Are you sure you want to delete this habit?")) return;
+
+      fetch(`${API_BASE}delete/${id}/`, {
+        method: "DELETE",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}"
+        }
+      })
+      .then(res => {
+        if (res.ok) {
+          document.getElementById(`habit-${id}`).remove();
+        } else {
+          alert("Failed to delete habit.");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error deleting habit.");
+      });
+    }
+
+    // Enable edit mode for a habit
+    function enableEdit(id) {
+      document.getElementById(`name-${id}`).style.display = "none";
+      document.getElementById(`input-${id}`).style.display = "inline-block";
+      const row = document.getElementById(`habit-${id}`);
+      row.querySelector(".edit-button").style.display = "none";
+      row.querySelector(".save-button").style.display = "inline-block";
+    }
+
+    // Save edited habit name
+    function saveEdit(id) {
+      const input = document.getElementById(`input-${id}`);
+      const newName = input.value.trim();
+      if (!newName) return;
+
+      fetch(`${API_BASE}update/${id}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ name: newName })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to update habit");
+        return res.json();
+      })
+      .then(() => fetchHabits())
+      .catch(err => {
+        console.error(err);
+        alert("Error updating habit");
+      });
+    }
+
+    // Toggle archive status
+    function toggleArchive(id) {
+      fetch(`${API_BASE}archive/${id}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to toggle archive");
+        return res.json();
+      })
+      .then(() => fetchHabits())
+      .catch(err => {
+        console.error(err);
+        alert("Error toggling archive status");
+      });
+    }
+  </script>
+</body>
+</html>

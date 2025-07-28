@@ -1,0 +1,176 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mood Log – Day View</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+<div class="wrapper">
+    {% include "menu.html" %}
+    <h2 class="centered-heading">How is your mood today?</h2>
+    <div class="navigation" role="navigation" aria-label="Day navigation">
+        <img src="{% static 'images/arrow_l.png' %}" alt="Previous day" class="nav-arrow" onclick="navigateTo('{{ prev_date }}')" />
+        <div class="date-display">{{ day_obj|date:"l, d M Y" }}</div>
+        <img src="{% static 'images/arrow_r.png' %}" alt="Next day" class="nav-arrow" onclick="navigateTo('{{ next_date }}')" />
+    </div>
+
+    <div class="sleep-timeline-container" style="max-width: 600px; margin: 0 auto;">
+        <div style="text-align:center; margin-bottom:10px; font-weight:600;">Select your mood level:</div>
+        <div class="timeline" id="mood-timeline" style="justify-content:center;">
+            {% for i in mood_range %}
+                <div class="block" data-index="{{ forloop.counter0 }}" data-value="{{ i }}">{{ i }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-submit">
+            <button id="save_mood" class="form-button" style="background: {{ button_gradient }};">Save</button>
+            <button id="delete_mood" class="form-button delete-button" style="background: {{ button_gradient }};">Delete</button>
+            {% if mood_value %}
+                <div id="mood_summary">Saved mood: {{ mood_value }}</div>
+            {% endif %}
+            <p id="mood_status"></p>
+        </div>
+    </div>
+</div>
+<script>
+function navigateTo(dateStr) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('start_date', dateStr);
+    window.location.href = url.toString();
+}
+
+// Mood block selection logic
+const blocks = document.querySelectorAll('#mood-timeline .block');
+const status = document.getElementById('mood_status');
+let selectedIdx = {% if mood_value %}{{ mood_value|add:'-1' }}{% else %}null{% endif %};
+
+// Get color for mood block
+function getMoodColor(idx) {
+    const stops = [
+        {pos: 1, color: [211, 47, 47]},    // red
+        {pos: 5, color: [255, 214, 0]},    // yellow
+        {pos: 10, color: [67, 160, 71]}    // green
+    ];
+    let c1, c2, p;
+    if (idx + 1 <= 5) {
+        c1 = stops[0].color; c2 = stops[1].color; p = (idx + 1 - 1) / (5 - 1);
+    } else {
+        c1 = stops[1].color; c2 = stops[2].color; p = (idx + 1 - 5) / (10 - 5);
+    }
+    const rgb = c1.map((v, i) => Math.round(v + (c2[i] - v) * p));
+    return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+}
+
+// Highlight selected mood block on load
+// and update on click
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (selectedIdx !== null) {
+        updateHighlight();
+        showStatus();
+    }
+});
+
+blocks.forEach((block, idx) => {
+    block.addEventListener('click', () => {
+        selectedIdx = idx;
+        updateHighlight();
+        showStatus();
+    });
+});
+
+function updateHighlight() {
+    blocks.forEach((b, i) => {
+        if (selectedIdx !== null && i <= selectedIdx) {
+            b.classList.add('slept');
+            b.style.background = getMoodColor(selectedIdx);
+            b.style.color = 'white';
+        } else {
+            b.classList.remove('slept');
+            b.style.background = '';
+            b.style.color = '';
+        }
+    });
+}
+
+function showStatus() {
+    if (selectedIdx !== null) {
+        status.textContent = `Selected mood: ${selectedIdx + 1}`;
+    } else {
+        status.textContent = '';
+    }
+}
+
+// Save mood log
+
+document.getElementById('save_mood').addEventListener('click', async () => {
+    if (selectedIdx === null) {
+        status.textContent = 'Select your mood.';
+        return;
+    }
+    const currentDateStr = '{{ day_obj|date:"Y-m-d" }}';
+    const payload = {
+        date: currentDateStr,
+        mood: selectedIdx + 1
+    };
+    fetch('/api/mood/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.mood) {
+            status.textContent = 'Mood saved.';
+            const summary = document.getElementById('mood_summary');
+            if (summary) {
+                summary.textContent = `Saved mood: ${data.mood}`;
+            } else {
+                const newSummary = document.createElement('div');
+                newSummary.id = 'mood_summary';
+                newSummary.textContent = `Saved mood: ${data.mood}`;
+                newSummary.style.textAlign = 'center';
+                newSummary.style.marginTop = '10px';
+                newSummary.style.fontSize = '1rem';
+                newSummary.style.fontWeight = '600';
+                document.querySelector('.form-submit').insertBefore(newSummary, status);
+            }
+        } else {
+            status.textContent = 'Save error.';
+        }
+    })
+    .catch(() => {
+        status.textContent = 'API connection error.';
+    });
+});
+
+// Delete mood log
+
+document.getElementById('delete_mood').addEventListener('click', async () => {
+    const currentDateStr = '{{ day_obj|date:"Y-m-d" }}';
+    fetch(`/api/mood/delete_day/?date=${currentDateStr}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.deleted > 0) {
+            status.textContent = 'Mood log for this day deleted.';
+            setTimeout(() => location.reload(), 800);
+        } else {
+            status.textContent = 'No mood log found for this day.';
+        }
+    })
+    .catch(() => {
+        status.textContent = 'API connection error.';
+    });
+});
+</script>
+</body>
+</html>
