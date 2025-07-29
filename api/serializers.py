@@ -8,6 +8,16 @@ class HabitSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SleepLogSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        start = validated_data['start']
+        end = validated_data['end']
+        from datetime import timedelta
+        if 19 <= start.hour <= 23:
+            start = start - timedelta(days=1)
+            end = end - timedelta(days=1)
+        validated_data['start'] = start
+        validated_data['end'] = end
+        return super().create(validated_data)
     duration = serializers.DurationField(read_only=True)
     sleep_date = serializers.DateField(read_only=True)
 
