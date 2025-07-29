@@ -48,19 +48,32 @@ You can start the HABITS Tracker web app locally using the provided batch file o
 
 ### Manual Steps
 1. Open a terminal in the project directory.
-2. Activate your virtual environment:
+2. (If you don't have a virtual environment yet) Create one:
+   ```bat
+   python -m venv venv
+   ```
+3. Activate your virtual environment:
    ```bat
    .\venv\Scripts\activate
    ```
-3. Run migrations to set up the database:
+4. Install dependencies:
+   ```bat
+   pip install -r requirements.txt
+   ```
+   or, if using Pipfile:
+   ```bat
+   pip install pipenv
+   pipenv install
+   ```
+5. Run migrations to set up the database:
    ```bat
    python manage.py migrate
    ```
-4. Start the Django development server:
+6. Start the Django development server:
    ```bat
    python manage.py runserver
    ```
-5. Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000).
+7. Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
 
 ## Planned Features
