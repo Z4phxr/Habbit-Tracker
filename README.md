@@ -34,46 +34,57 @@ A Django-based web application for tracking habits, sleep, and mood, with a mode
 - Change background images and color schemes in `base/static/style.css` and `base/utils.py`.
 - Extend API functionality in `api/views.py` and `api/serializers.py`.
 
-## How to Open and Run the App
 
-You can start the HABITS Tracker web app locally using the provided batch file or manually:
+## Jak uruchomić lokalnie przez Docker
 
-### Using the Batch File (Windows)
-1. Ensure you have Python 3.13 and Django dependencies installed in your virtual environment (`venv`).
-2. Double-click `Habbits.bat` or run it from the command line:
-   ```bat
-   Habbits.bat
+1. Skopiuj plik `.env.example` do `.env` i uzupełnij wartości (np. SECRET_KEY).
+2. Zbuduj i uruchom kontenery:
+   ```sh
+   docker-compose up --build
    ```
-   - This will activate your virtual environment, run migrations, start the Django server, and open the app in your default browser at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+3. Aplikacja będzie dostępna na [http://localhost:8000](http://localhost:8000)
+4. Aby zatrzymać i usunąć kontenery:
+   ```sh
+   docker-compose down
+   ```
 
-### Manual Steps
-1. Open a terminal in the project directory.
-2. (If you don't have a virtual environment yet) Create one:
-   ```bat
-   python -m venv venv
-   ```
-3. Activate your virtual environment:
-   ```bat
-   .\venv\Scripts\activate
-   ```
-4. Install dependencies:
-   ```bat
-   pip install -r requirements.txt
-   ```
-   or, if using Pipfile:
-   ```bat
-   pip install pipenv
-   pipenv install
-   ```
-5. Run migrations to set up the database:
-   ```bat
-   python manage.py migrate
-   ```
-6. Start the Django development server:
-   ```bat
-   python manage.py runserver
-   ```
-7. Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000).
+## Jak zdeployować na Railway/Render
+
+1. Wgraj cały projekt do repozytorium GitHub.
+2. Skonfiguruj Railway/Render:
+   - Ustaw zmienne środowiskowe z `.env.example` (szczególnie SECRET_KEY, DB, PORT)
+   - Wskaż komendę startową:
+     ```sh
+     gunicorn habits_project.wsgi:application --bind 0.0.0.0:${PORT}
+     ```
+   - Railway/Render automatycznie wykryje PORT z ENV
+3. Dodaj bazę danych PostgreSQL przez panel Railway/Render i uzupełnij zmienne w projekcie.
+4. Deploy nastąpi automatycznie po każdym pushu do repozytorium.
+
+## Pliki konfiguracyjne i ich rola
+
+- `Dockerfile` – buduje obraz produkcyjny Django z Gunicornem, obsługuje zmienne środowiskowe, pliki statyczne.
+- `docker-compose.yml` – uruchamia aplikację i bazę PostgreSQL, mapuje porty, korzysta z pliku `.env`.
+- `.env.example` – przykładowe zmienne środowiskowe (skopiuj do `.env` do uruchomienia lokalnie).
+- `entrypoint.sh` – skrypt startowy: migracje, collectstatic, uruchomienie Gunicorna.
+- `.github/workflows/docker-build.yml` – workflow GitHub Actions: buduje i opcjonalnie publikuje obraz Dockera do GHCR.
+- `.github/workflows/ci.yml` – workflow GitHub Actions: testy, lint, migracje na PR/main.
+- `habits_project/settings.py` – obsługa produkcyjnych zmiennych środowiskowych, STATIC_ROOT, MEDIA_ROOT, ALLOWED_HOSTS, PORT.
+
+## Checklist: uruchomienie lokalne przez Docker
+
+- [ ] Skopiuj `.env.example` do `.env` i ustaw wartości
+- [ ] `docker-compose up --build`
+- [ ] Sprawdź logi: `docker-compose logs web`
+- [ ] Aplikacja działa na [http://localhost:8000](http://localhost:8000)
+
+## Checklist: deploy na Railway/Render
+
+- [ ] Wgraj repozytorium na GitHub
+- [ ] Skonfiguruj zmienne środowiskowe w panelu
+- [ ] Dodaj bazę PostgreSQL przez panel
+- [ ] Ustaw komendę startową Gunicorn
+- [ ] Deploy automatyczny po pushu
 
 
 ## Planned Features

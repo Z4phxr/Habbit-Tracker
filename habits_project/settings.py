@@ -19,20 +19,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+import os
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+# DEBUG: False w produkcji
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+
+# ALLOWED_HOSTS z ENV (wymagane w produkcji)
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
 
 
 STATIC_URL = '/static/'
-import os
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'base/static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files (optional, for user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Application definition
@@ -89,6 +97,19 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# If running with Postgres in Docker, override via env vars
+if os.environ.get('POSTGRES_DB'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB'),
+            'USER': os.environ.get('POSTGRES_USER'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
