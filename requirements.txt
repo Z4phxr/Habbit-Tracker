@@ -1,4 +1,15 @@
 Django==5.2.3
 djangorestframework
-gunicorn
-psycopg2-binary
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
+
+# Production dependencies
+whitenoise==6.6.0
+django-cors-headers==4.3.1
+django-environ==0.11.2
+
+# Monitoring and logging
+sentry-sdk==1.40.0
+
+# Security
+django-csp==3.8
