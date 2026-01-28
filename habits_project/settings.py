@@ -264,16 +264,20 @@ except PermissionError:
 # Sentry configuration (optional, for error tracking)
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 if SENTRY_DSN:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=0.1,
-        send_default_pii=False,
-        environment=os.environ.get('ENVIRONMENT', 'production'),
-    )
+    try:
+        import sentry_sdk  # type: ignore
+        from sentry_sdk.integrations.django import DjangoIntegration  # type: ignore
+        
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration()],
+            traces_sample_rate=0.1,
+            send_default_pii=False,
+            environment=os.environ.get('ENVIRONMENT', 'production'),
+        )
+    except ImportError:
+        # Sentry SDK not installed, skip error tracking
+        pass
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
