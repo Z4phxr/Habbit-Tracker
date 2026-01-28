@@ -47,42 +47,12 @@ That's it! Your habit tracker is now running.
 
 - **Backend**: Python 3.11, Django 5.2.3
 - **Database**: PostgreSQL 15 (SQLite for development)
-
 - **Backend**: Django 5.2.3, Python 3.11
 - **Database**: PostgreSQL 15
 - **Frontend**: HTML, CSS, JavaScript
 - **Server**: Gunicorn
 - **Containerization**: Docker & Docker Compose
 
-## 📝 Usage
-
-### Navigate the App
-
-1. **Home Page** - Overview of all tracking sections
-2. **Habits** - Create and track custom habits
-3. **Sleep** - Log sleep periods and view patterns
-4. **Mood** - Record daily mood ratings
-5. **Edit** - Manage your habit list
-
-### Common Commands
-
-```bash
-# View logs
-docker-compose logs -f
-
-# Stop the app
-docker-compose down
-
-# Restart
-docker-compose restart
-
-# Create admin user
-docker-compose exec web python manage.py createsuperuser
-```
-
-### Windows Users
-
-Double-click `docker-manager.bat` for an easy-to-use menu interface!
 
 ## 📊 API Endpoints
 
@@ -93,56 +63,6 @@ GET  /api/mood/{id}/     # Get specific entry
 PUT  /api/mood/{id}/     # Update entry
 DELETE /api/mood/{id}/   # Delete entry
 ```
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🙏 Acknowledgments
-
-Built with Django, PostgreSQL, and Docker.
-
-## Jak zdeployować na Railway/Render
-
-1. Wgraj cały projekt do repozytorium GitHub.
-2. Skonfiguruj Railway/Render:
-   - Ustaw zmienne środowiskowe z `.env.example` (szczególnie SECRET_KEY, DB, PORT)
-   - Wskaż komendę startową:
-     ```sh
-     gunicorn habits_project.wsgi:application --bind 0.0.0.0:${PORT}
-     ```
-   - Railway/Render automatycznie wykryje PORT z ENV
-3. Dodaj bazę danych PostgreSQL przez panel Railway/Render i uzupełnij zmienne w projekcie.
-4. Deploy nastąpi automatycznie po każdym pushu do repozytorium.
-
-## Pliki konfiguracyjne i ich rola
-
-- `Dockerfile` – buduje obraz produkcyjny Django z Gunicornem, obsługuje zmienne środowiskowe, pliki statyczne.
-- `docker-compose.yml` – uruchamia aplikację i bazę PostgreSQL, mapuje porty, korzysta z pliku `.env`.
-- `.env.example` – przykładowe zmienne środowiskowe (skopiuj do `.env` do uruchomienia lokalnie).
-- `entrypoint.sh` – skrypt startowy: migracje, collectstatic, uruchomienie Gunicorna.
-- `.github/workflows/docker-build.yml` – workflow GitHub Actions: buduje i opcjonalnie publikuje obraz Dockera do GHCR.
-- `.github/workflows/ci.yml` – workflow GitHub Actions: testy, lint, migracje na PR/main.
-- `habits_project/settings.py` – obsługa produkcyjnych zmiennych środowiskowych, STATIC_ROOT, MEDIA_ROOT, ALLOWED_HOSTS, PORT.
-
-## Checklist: uruchomienie lokalne przez Docker
-
-- [ ] Skopiuj `.env.example` do `.env` i ustaw wartości
-- [ ] `docker-compose up --build`
-- [ ] Sprawdź logi: `docker-compose logs web`
-- [ ] Aplikacja działa na [http://localhost:8000](http://localhost:8000)
-
-## Checklist: deploy na Railway/Render
-
-- [ ] Wgraj repozytorium na GitHub
-- [ ] Skonfiguruj zmienne środowiskowe w panelu
-- [ ] Dodaj bazę PostgreSQL przez panel
-- [ ] Ustaw komendę startową Gunicorn
-- [ ] Deploy automatyczny po pushu
 
 
 ## Planned Features
