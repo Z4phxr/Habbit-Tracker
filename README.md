@@ -1,147 +1,88 @@
-# Habits Tracker
+# Habit Tracker
 
-**A Django-based web application for tracking habits, sleep, and mood with a modern visual interface and REST API support.**
+> A simple web application for tracking daily habits, sleep patterns, and mood with visual progress indicators.
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 [![Django](https://img.shields.io/badge/Django-5.2.3-green)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://www.postgresql.org/)
+
+## 📖 About
+
+Habit Tracker helps you monitor your daily habits, sleep quality, and mood over time. View your progress in day, week, or month formats with intuitive color-coded visual blocks.
 
 ## ✨ Features
 
-- **📊 Habits Tracking**: Log daily, weekly, and monthly progress for custom habits with visual completion status
-- **😴 Sleep Tracking**: Input sleep periods with color-coded blocks for easy visualization across day/week/month views
-- **😊 Mood Tracking**: Log daily mood (1-10 scale) with calendar-style views and color-coded indicators
-- **🔌 REST API**: Complete API endpoints for integration with other tools and mobile apps
-- **🐳 Docker Ready**: Fully containerized with production-ready configuration
-- **🚀 Easy Deployment**: One-command deployment to any cloud platform
-- **🔒 Production Ready**: Security best practices, health checks, and monitoring built-in
+- 📊 **Habit Tracking** - Create custom habits and track daily completion
+- 😴 **Sleep Logging** - Record sleep periods and visualize patterns
+- 😊 **Mood Tracking** - Log daily mood on a 1-10 scale
+- 📅 **Multiple Views** - See data by day, week, or month
+- 🎨 **Visual Interface** - Color-coded blocks for easy progress monitoring
+- 🔌 **REST API** - Integrate with other tools
 
 ## 🚀 Quick Start
 
-### Using Docker (Recommended)
+### Prerequisites
+
+- [Docker](https://www.docker.com/get-started) and Docker Compose installed
+
+### Run the Application
 
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone <your-repo-url>
 cd Habbit-Tracker
 
-# 2. Copy environment file and configure
+# Copy and configure environment file
 cp .env.example .env
-# Edit .env with your settings
 
-# 3. Start the application
+# Start the application
 docker-compose up -d
 
-# 4. Access at http://localhost:8000
+# Access the app at http://localhost:8000
 ```
 
-**That's it!** The application is now running with PostgreSQL.
+That's it! Your habit tracker is now running.
 
-For detailed instructions, see [QUICKSTART.md](QUICKSTART.md)
-
-## 📚 Documentation
-
-- **[QUICKSTART.md](QUICKSTART.md)** - Get started in 5 minutes
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide with platform-specific instructions
-- **[Makefile](Makefile)** - Common commands and tasks
-
-## 🛠️ Technologies
+## 🛠️ Built With
 
 - **Backend**: Python 3.11, Django 5.2.3
 - **Database**: PostgreSQL 15 (SQLite for development)
-- **API**: Django REST Framework
-- **Server**: Gunicorn with multiple workers
-- **Proxy**: Nginx (optional, for production)
-- **Container**: Docker & Docker Compose
-- **Static Files**: WhiteNoise for efficient serving
 
-## 📋 Common Commands
+- **Backend**: Django 5.2.3, Python 3.11
+- **Database**: PostgreSQL 15
+- **Frontend**: HTML, CSS, JavaScript
+- **Server**: Gunicorn
+- **Containerization**: Docker & Docker Compose
 
-Using Make (recommended):
+## 📝 Usage
 
-```bash
-make up                 # Start all services
-make down              # Stop all services
-make logs              # View logs
-make shell             # Open Django shell
-make migrate           # Run database migrations
-make createsuperuser   # Create admin user
-make test              # Run tests
-make backup-db         # Backup database
-```
+### Navigate the App
 
-Using Docker Compose directly:
+1. **Home Page** - Overview of all tracking sections
+2. **Habits** - Create and track custom habits
+3. **Sleep** - Log sleep periods and view patterns
+4. **Mood** - Record daily mood ratings
+5. **Edit** - Manage your habit list
+
+### Common Commands
 
 ```bash
-docker-compose up -d              # Start services
-docker-compose logs -f            # View logs
-docker-compose exec web bash     # Open shell
-docker-compose down              # Stop services
+# View logs
+docker-compose logs -f
+
+# Stop the app
+docker-compose down
+
+# Restart
+docker-compose restart
+
+# Create admin user
+docker-compose exec web python manage.py createsuperuser
 ```
 
-## 🏗️ Project Structure
+### Windows Users
 
-```
-Habbit-Tracker/
-├── 📁 base/              # Main application
-│   ├── models.py         # Database models
-│   ├── views.py          # View logic
-│   ├── static/           # CSS, images
-│   └── templates/        # HTML templates
-├── 📁 api/               # REST API
-│   ├── views.py          # API endpoints
-│   └── serializers.py    # Data serialization
-├── 📁 habits_project/    # Django project settings
-│   └── settings.py       # Configuration
-├── 🐳 Dockerfile         # Multi-stage production image
-├── 🐳 docker-compose.yml # Development setup
-├── 📝 requirements.txt   # Python dependencies
-├── 🔧 .env.example       # Environment template
-└── 📚 DEPLOYMENT.md      # Deployment guide
-```
-
-## 🌐 Deployment
-
-This application is ready to deploy to:
-
-- **AWS EC2** / **Lightsail**
-- **DigitalOcean Droplets**
-- **Azure Container Instances**
-- **Google Cloud Run**
-- **Heroku**
-- **Railway**
-- **Render**
-- Any VPS with Docker support
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for platform-specific guides.
-
-## 🔒 Security Features
-
-- ✅ Multi-stage Docker build with minimal attack surface
-- ✅ Non-root container user
-- ✅ Security headers (HSTS, CSP, X-Frame-Options)
-- ✅ HTTPS support with SSL redirect
-- ✅ Secure cookie configuration
-- ✅ Environment-based secrets management
-- ✅ Database connection pooling
-- ✅ Health checks and monitoring
-
-## 🎯 Usage
-
-- Use the navigation menu to switch between Habits, Sleep, and Mood trackers
-- Click blocks to log or edit entries
-- Use arrows to navigate between days, weeks, and months
-- API endpoints available at `/api/` for programmatic access
-- Admin panel at `/admin` for management
-
-## 🔧 Customization
-
-- **Add new habits**: Via the edit habits page
-- **Styling**: Modify `base/static/style.css`
-- **Colors**: Update color schemes in `base/utils.py`
-- **API**: Extend functionality in `api/views.py`
-- **Settings**: Configure in `habits_project/settings.py` or via environment variables
+Double-click `docker-manager.bat` for an easy-to-use menu interface!
 
 ## 📊 API Endpoints
 
@@ -153,29 +94,17 @@ PUT  /api/mood/{id}/     # Update entry
 DELETE /api/mood/{id}/   # Delete entry
 ```
 
-## 🐛 Troubleshooting
-
-If you encounter issues:
-
-1. **Check logs**: `docker-compose logs -f`
-2. **Verify .env**: Ensure all required variables are set
-3. **Database issues**: Check PostgreSQL is running `docker-compose ps`
-4. **Port conflicts**: Change PORT in .env if 8000 is taken
-5. **See detailed troubleshooting**: [DEPLOYMENT.md](DEPLOYMENT.md#troubleshooting)
-
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Feel free to open issues or submit pull requests.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is open source and available under the [MIT License](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- Django community for excellent documentation
-- Docker for containerization platform
-- PostgreSQL for robust database
+Built with Django, PostgreSQL, and Docker.
 
 ## Jak zdeployować na Railway/Render
 
