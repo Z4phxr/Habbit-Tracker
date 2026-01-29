@@ -19,6 +19,16 @@ Habit Tracker helps you monitor your daily habits, sleep quality, and mood over 
 - 🎨 **Visual Interface** - Color-coded blocks for easy progress monitoring
 - 🔌 **REST API** - Integrate with other tools
 
+
+## 🚀 Live demo
+
+The application is deployed on Railway:
+
+👉 [https://web-production-b267d.up.railway.app](https://web-production-b267d.up.railway.app/)
+
+> This is a demo environment. Data may be reset periodically.
+
+
 ## 🚀 Quick Start
 
 ### Prerequisites
