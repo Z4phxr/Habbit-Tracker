@@ -1,79 +1,68 @@
-# HABITS Tracker
+# Habit Tracker
 
-**Note: This project is a work in progress. Features and UI may change.**
+> A simple web application for tracking daily habits, sleep patterns, and mood with visual progress indicators.
 
-A Django-based web application for tracking habits, sleep, and mood, with a modern, block-based visual interface and REST API support.
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![Django](https://img.shields.io/badge/Django-5.2.3-green)](https://www.djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
 
-## Features
+## 📖 About
 
-- **Habits Tracking**: Log daily, weekly, and monthly progress for custom habits. Visual tables show completion status.
-- **Sleep Tracking**: Input sleep periods, view sleep blocks by day, week, and month. Color-coded blocks for easy visualization.
-- **Mood Tracking**: Log daily mood (1-10 scale), view mood history in day, week, and month formats. Calendar-style month view with color-coded blocks.
-- **REST API**: Endpoints for logging and deleting mood entries, supporting integration with other tools or mobile apps.
-- **Custom Template Tags**: Dynamic color mapping for mood blocks using Django template filters.
-- **Responsive UI**: Modern CSS layout, navigation, and visual feedback for all trackers.
+Habit Tracker helps you monitor your daily habits, sleep quality, and mood over time. View your progress in day, week, or month formats with intuitive color-coded visual blocks.
 
-## Technologies
+## ✨ Features
 
-- Python 3.13
-- Django 5.2.3
-- Django REST Framework
-- SQLite (default, can be changed)
-- HTML/CSS (custom templates)
+- 📊 **Habit Tracking** - Create custom habits and track daily completion
+- 😴 **Sleep Logging** - Record sleep periods and visualize patterns
+- 😊 **Mood Tracking** - Log daily mood on a 1-10 scale
+- 📅 **Multiple Views** - See data by day, week, or month
+- 🎨 **Visual Interface** - Color-coded blocks for easy progress monitoring
+- 🔌 **REST API** - Integrate with other tools
 
-## Usage
+## 🚀 Quick Start
 
-- Use the navigation menu to switch between Habits, Sleep, and Mood trackers.
-- Click blocks to log or edit entries.
-- Use arrows to navigate between days, weeks, and months.
-- API endpoints are available under `/api/` for mood logging.
+### Prerequisites
 
-## Customization
+- [Docker](https://www.docker.com/get-started) and Docker Compose installed
 
-- Add new habits via the edit habits page.
-- Change background images and color schemes in `base/static/style.css` and `base/utils.py`.
-- Extend API functionality in `api/views.py` and `api/serializers.py`.
+### Run the Application
 
-## How to Open and Run the App
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd Habbit-Tracker
 
-You can start the HABITS Tracker web app locally using the provided batch file or manually:
+# Copy and configure environment file
+cp .env.example .env
 
-### Using the Batch File (Windows)
-1. Ensure you have Python 3.13 and Django dependencies installed in your virtual environment (`venv`).
-2. Double-click `Habbits.bat` or run it from the command line:
-   ```bat
-   Habbits.bat
-   ```
-   - This will activate your virtual environment, run migrations, start the Django server, and open the app in your default browser at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+# Start the application
+docker-compose up -d
 
-### Manual Steps
-1. Open a terminal in the project directory.
-2. (If you don't have a virtual environment yet) Create one:
-   ```bat
-   python -m venv venv
-   ```
-3. Activate your virtual environment:
-   ```bat
-   .\venv\Scripts\activate
-   ```
-4. Install dependencies:
-   ```bat
-   pip install -r requirements.txt
-   ```
-   or, if using Pipfile:
-   ```bat
-   pip install pipenv
-   pipenv install
-   ```
-5. Run migrations to set up the database:
-   ```bat
-   python manage.py migrate
-   ```
-6. Start the Django development server:
-   ```bat
-   python manage.py runserver
-   ```
-7. Open your browser and go to [http://127.0.0.1:8000](http://127.0.0.1:8000).
+# Access the app at http://localhost:8000
+```
+
+That's it! Your habit tracker is now running.
+
+## 🛠️ Built With
+
+- **Backend**: Python 3.11, Django 5.2.3
+- **Database**: PostgreSQL 15 (SQLite for development)
+- **Backend**: Django 5.2.3, Python 3.11
+- **Database**: PostgreSQL 15
+- **Frontend**: HTML, CSS, JavaScript
+- **Server**: Gunicorn
+- **Containerization**: Docker & Docker Compose
+
+
+## 📊 API Endpoints
+
+```
+GET  /api/mood/          # List mood entries
+POST /api/mood/          # Create mood entry
+GET  /api/mood/{id}/     # Get specific entry
+PUT  /api/mood/{id}/     # Update entry
+DELETE /api/mood/{id}/   # Delete entry
+```
 
 
 ## Planned Features

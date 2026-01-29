@@ -38,3 +38,5 @@ Pipfile.lock
 *.db
 
 db.sqlite3
+
+docs/
