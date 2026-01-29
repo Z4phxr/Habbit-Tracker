@@ -1,2 +1,6 @@
 Django==5.2.3
 djangorestframework
+gunicorn
+psycopg2-binary
+whitenoise
+dj-database-url
