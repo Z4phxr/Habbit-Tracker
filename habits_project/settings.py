@@ -38,13 +38,6 @@ if 'testserver' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('testserver')
 
 
-STATIC_URL = '/static/'
-import os
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'base/static'),
-]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -170,16 +163,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'base/static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# WhiteNoise configuration for serving static files
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files (optional, for user uploads)
 MEDIA_URL = '/media/'
