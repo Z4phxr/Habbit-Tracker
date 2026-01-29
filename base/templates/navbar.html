@@ -1,0 +1,23 @@
+{% load static %}
+<nav class="navbar">
+    <div class="navbar-container">
+        <div class="navbar-brand">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="navbar-logo">
+                <span class="navbar-title">Habit Tracker</span>
+            </a>
+        </div>
+        <div class="navbar-links">
+            {% if user.is_authenticated %}
+                <a href="{% url 'tracker' section='habits' period='week' %}" class="navbar-link navbar-habits" style="background: {{ button_gradient }};">🌳 Habits</a>
+                <a href="{% url 'tracker' section='sleep' period='week' %}" class="navbar-link navbar-sleep" style="background: {{ button_gradient }};">🌙 Sleep</a>
+                <a href="{% url 'tracker' section='mood' period='week' %}" class="navbar-link navbar-mood" style="background: {{ button_gradient }};">😌 Mood</a>
+                <a href="{% url 'edit_habits' %}" class="navbar-link navbar-edit" style="background: {{ button_gradient }};">✏️ Edit</a>
+                <a href="{% url 'logout' %}" class="navbar-link navbar-logout" style="background: {{ button_gradient }};">🚪 Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="navbar-link" style="background: {{ button_gradient }};">Login</a>
+                <a href="{% url 'register' %}" class="navbar-link navbar-register" style="background: {{ button_gradient }};">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>

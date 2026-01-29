@@ -9,6 +9,9 @@
   <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
 </head>
 <body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+{% include 'navbar.html' %}
+<div class="page-content">
+
   <div class="wrapper">
     {% include "menu.html" %}
     <h1>All Habits</h1>
@@ -206,5 +209,6 @@
       });
     }
   </script>
+</div>
 </body>
 </html>
