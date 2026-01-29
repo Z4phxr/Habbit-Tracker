@@ -12,23 +12,37 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Detect if running tests
+TESTING = 'test' in sys.argv
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5')
 
-# DEBUG: True for development, False in production
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# ALLOWED_HOSTS from ENV (required in production)
-# Allow all hosts in DEBUG mode, otherwise use environment variable
-ALLOWED_HOSTS = ['*'] if DEBUG else os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Parse ALLOWED_HOSTS and add testserver for testing
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Add testserver for Django test client
+if 'testserver' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('testserver')
+
+
+STATIC_URL = '/static/'
+import os
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'base/static'),
+]
 
 
 # Application definition
@@ -87,12 +101,21 @@ WSGI_APPLICATION = 'habits_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # If running with Postgres in Docker, override via env vars
 if os.environ.get('POSTGRES_DB'):
@@ -201,7 +224,7 @@ if DEBUG:
 
 
 # Security settings for production
-if not DEBUG:
+if not DEBUG and not TESTING:
     # HTTPS settings
     SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
     SESSION_COOKIE_SECURE = True
@@ -217,6 +240,9 @@ if not DEBUG:
     
     # Proxy settings (if behind a reverse proxy)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+else:
+    # Disable HTTPS redirects for development and testing
+    SECURE_SSL_REDIRECT = False
 
 
 # Logging configuration

@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, first_deploy ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Verify installation
+      run: |
+        pip list
+        python -c "import dj_database_url; print('dj_database_url imported successfully')"
+    
+    - name: Run migrations check
+      run: |
+        python manage.py makemigrations --check --dry-run
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
+    
+    - name: Run Django checks
+      run: |
+        python manage.py check
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
+    
+    - name: Run tests
+      run: |
+        python manage.py test
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
