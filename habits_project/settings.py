@@ -22,19 +22,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if os.environ.get('DEBUG', 'False') == 'True':
+        # Development fallback
+        SECRET_KEY = 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5'
+    else:
+        raise ValueError('SECRET_KEY environment variable must be set in production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
-
-STATIC_URL = '/static/'
-import os
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'base/static'),
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if host.strip()
 ]
+
+# CSRF trusted origins for cloud deployment
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{host}" for host in ALLOWED_HOSTS 
+    if host not in ["localhost", "127.0.0.1", ""]
+]
+
+
+
 
 
 # Application definition
