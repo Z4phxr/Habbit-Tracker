@@ -6,6 +6,10 @@ from rest_framework.authtoken.models import Token
 from base.models import Habit, HabitLog, SleepLog, MoodLog
 from datetime import date, datetime, timedelta
 
+# Test credentials - not used in production
+TEST_PASSWORD = 'testpass123'  # nosec B105
+TEST_PASSWORD_STRONG = 'TestPass123!'  # nosec B105
+
 
 class HabitAPITestCase(TestCase):
     """Test API endpoints for habits with authentication."""
@@ -15,7 +19,7 @@ class HabitAPITestCase(TestCase):
         self.user = User.objects.create_user(
             username='testuser',
             email='test@example.com',
-            password='testpass123'
+            password=TEST_PASSWORD
         )
         self.client = APIClient()
         self.token = Token.objects.create(user=self.user)
@@ -53,7 +57,7 @@ class HabitAPITestCase(TestCase):
     
     def test_get_habits_only_own(self):
         """Test that users only see their own habits."""
-        other_user = User.objects.create_user(username='other', password='pass')
+        other_user = User.objects.create_user(username='other', password=TEST_PASSWORD)
         Habit.objects.create(name='My Habit', user=self.user)
         Habit.objects.create(name='Other Habit', user=other_user)
         response = self.client.get('/api/habits/')
@@ -70,7 +74,7 @@ class HabitAPITestCase(TestCase):
     
     def test_delete_habit_not_owned(self):
         """Test cannot delete other user's habit."""
-        other_user = User.objects.create_user(username='other', password='pass')
+        other_user = User.objects.create_user(username='other', password=TEST_PASSWORD)
         habit = Habit.objects.create(name='Exercise', user=other_user)
         response = self.client.delete(f'/api/habits/delete/{habit.id}/')
         self.assertEqual(response.status_code, 404)
@@ -129,7 +133,7 @@ class SleepLogAPITestCase(TestCase):
     """Test API endpoints for sleep logs."""
     
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
+        self.user = User.objects.create_user(username='testuser', password=TEST_PASSWORD)
         self.client = APIClient()
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
@@ -167,7 +171,7 @@ class MoodLogAPITestCase(TestCase):
     """Test API endpoints for mood logs."""
     
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='testpass123')
+        self.user = User.objects.create_user(username='testuser', password=TEST_PASSWORD)
         self.client = APIClient()
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
@@ -206,8 +210,8 @@ class WebAuthTestCase(TestCase):
         response = self.client.post('/register/', {
             'username': 'newuser',
             'email': 'new@example.com',
-            'password': 'TestPass123!',
-            'password_confirm': 'TestPass123!'
+            'password': TEST_PASSWORD_STRONG,
+            'password_confirm': TEST_PASSWORD_STRONG
         })
         self.assertEqual(User.objects.count(), 1)
         user = User.objects.first()
@@ -216,17 +220,17 @@ class WebAuthTestCase(TestCase):
     
     def test_login_valid_credentials(self):
         """Test login with valid credentials."""
-        User.objects.create_user(username='testuser', password='testpass123')
+        User.objects.create_user(username='testuser', password=TEST_PASSWORD)
         response = self.client.post('/login/', {
             'username': 'testuser',
-            'password': 'testpass123'
+            'password': TEST_PASSWORD
         })
         self.assertEqual(response.status_code, 302)  # Redirect after login
     
     def test_logout(self):
         """Test logout."""
-        user = User.objects.create_user(username='testuser', password='testpass123')
-        self.client.login(username='testuser', password='testpass123')
+        user = User.objects.create_user(username='testuser', password=TEST_PASSWORD)
+        self.client.login(username='testuser', password=TEST_PASSWORD)
         response = self.client.get('/logout/')
         self.assertEqual(response.status_code, 302)  # Redirect to login
 
