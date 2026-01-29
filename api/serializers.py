@@ -6,6 +6,7 @@ class HabitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Habit
         fields = '__all__'
+        read_only_fields = ['user']
 
 class SleepLogSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
@@ -24,9 +25,11 @@ class SleepLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SleepLog
         fields = ['id', 'start', 'end', 'duration', 'sleep_date']
+        read_only_fields = ['user']
 
 
 class MoodLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = MoodLog
         fields = ['id', 'date', 'mood', 'note']
+        read_only_fields = ['user']
