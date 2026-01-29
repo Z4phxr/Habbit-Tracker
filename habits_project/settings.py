@@ -33,9 +33,14 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # Parse ALLOWED_HOSTS and add testserver for testing
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-# Add testserver for Django test client
 if 'testserver' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('testserver')
+
+# CSRF trusted origins (required for production)
+CSRF_TRUSTED_ORIGINS = [
+    "https://web-production-b267d.up.railway.app",
+]
+
 
 
 # Application definition
