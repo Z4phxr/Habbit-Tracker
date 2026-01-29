@@ -12,10 +12,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Detect if running tests
+TESTING = 'test' in sys.argv
 
 
 # Quick-start development settings - unsuitable for production
@@ -228,7 +232,7 @@ if DEBUG:
 
 
 # Security settings for production
-if not DEBUG:
+if not DEBUG and not TESTING:
     # HTTPS settings
     SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
     SESSION_COOKIE_SECURE = True
@@ -244,6 +248,9 @@ if not DEBUG:
     
     # Proxy settings (if behind a reverse proxy)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+else:
+    # Disable HTTPS redirects for development and testing
+    SECURE_SSL_REDIRECT = False
 
 
 # Logging configuration
