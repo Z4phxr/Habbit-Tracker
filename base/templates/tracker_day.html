@@ -10,6 +10,9 @@
 
 </head>
 <body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+{% include 'navbar.html' %}
+<div class="page-content">
+
    <div class="wrapper">
         {% include "menu.html" %}
         <h1>{{motto}}</h1>
@@ -73,5 +76,6 @@
             window.location.href = url.toString();
         }
     </script>
+</div>
 </body>
 </html>

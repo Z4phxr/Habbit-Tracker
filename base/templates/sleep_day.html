@@ -9,6 +9,9 @@
     <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
 </head>
 <body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+{% include 'navbar.html' %}
+<div class="page-content">
+
 <div class="wrapper">
     {% include "menu.html" %}
 
@@ -233,5 +236,6 @@
         window.location.href = url.toString();
     }
 </script>
+</div>
 </body>
 </html>
