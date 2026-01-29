@@ -1,7 +1,14 @@
 from django.urls import path
 from . import views
+from . import auth_views
 
 urlpatterns = [
+    # Authentication URLs
+    path('auth/register/', auth_views.register, name='api_register'),
+    path('auth/login/', auth_views.login, name='api_login'),
+    path('auth/logout/', auth_views.logout, name='api_logout'),
+    path('auth/verify/', auth_views.verify_token, name='api_verify_token'),
+
     # Habit URLs
     path('habits/', views.getData, name="get_data"),
     path('habits/add_habit/', views.addHabit, name="add_habit"),

@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+{% include 'navbar.html' %}
+<div class="page-content">
+
 <div class="wrapper">
     {% include "menu.html" %}
     <h2 class="centered-heading">How is your mood today?</h2>
@@ -172,5 +175,6 @@ document.getElementById('delete_mood').addEventListener('click', async () => {
     });
 });
 </script>
+</div>
 </body>
 </html>
