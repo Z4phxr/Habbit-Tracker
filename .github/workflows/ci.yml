@@ -31,12 +31,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
+    - name: Verify installation
+      run: |
+        pip list
+        python -c "import dj_database_url; print('dj_database_url imported successfully')"
+    
     - name: Run migrations check
       run: |
         python manage.py makemigrations --check --dry-run
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
     
     - name: Run Django checks
       run: |
@@ -44,6 +50,7 @@ jobs:
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
     
     - name: Run tests
       run: |
@@ -51,3 +58,4 @@ jobs:
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'
