@@ -1,12 +1,21 @@
 from datetime import date, timedelta, datetime, time
 import json
 import calendar
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from django.utils.timezone import make_aware
 from base.models import SleepLog, Habit, HabitLog, MoodLog
 from .utils import get_background, return_motto
 
 def homepage(request):
+    """
+    Public homepage - shows welcome message with login/register options.
+    If user is already logged in, redirect to their habits tracker.
+    """
+    # Redirect authenticated users to their habits
+    if request.user.is_authenticated:
+        return redirect('tracker', section='habits', period='week')
+    
     background_image, button_gradient = get_background()
     return render(request, 'index.html', {
         'background_image': background_image,
@@ -14,8 +23,13 @@ def homepage(request):
     })
 
 
+@login_required
 def edit_habits(request):
-    habits = Habit.objects.filter(archived=False)
+    """
+    Edit habits page - only show user's own habits.
+    Requires authentication.
+    """
+    habits = Habit.objects.filter(user=request.user, archived=False)
     background_image, button_gradient = get_background()
     return render(request, "edit_habits.html", {
         'habits': habits,
@@ -25,9 +39,14 @@ def edit_habits(request):
 
 # Habits tracking views
 
+@login_required
 def track_habits(request, view_mode='week'):
+    """
+    Track habits for authenticated user only.
+    Shows habits in day/week/month views.
+    """
     background_image, button_gradient = get_background()
-    habits = Habit.objects.filter(archived=False)
+    habits = Habit.objects.filter(user=request.user, archived=False)
 
     # Get start date from GET params or use today
     start_date_str = request.GET.get('start_date')
@@ -85,12 +104,20 @@ def track_habits(request, view_mode='week'):
 
 # Sleep tracking views
 
-def process_day(day: datetime):
+def process_day(day: datetime, user):
+    """
+    Process sleep data for a specific day and user.
+    Calculate the night period (20:00 previous day to 12:00 current day).
+    """
     # Calculate the night period (20:00 previous day to 12:00 current day)
     night_start = make_aware(datetime.combine(day - timedelta(days=1), time(20, 0)))
     night_end = night_start + timedelta(hours=16)
 
-    logs = SleepLog.objects.filter(start__lt=night_end, end__gt=night_start).order_by('-end')
+    logs = SleepLog.objects.filter(
+        user=user,
+        start__lt=night_end,
+        end__gt=night_start
+    ).order_by('-end')
     log = logs.first()  # Use only the newest log
 
     total_sleep = timedelta(0)
@@ -118,7 +145,11 @@ def process_day(day: datetime):
     hour_labels = [(night_start + timedelta(hours=i)).strftime("%H:%M") for i in range(17)]
     return blocks, sleep_time_str, hour_labels
 
+@login_required
 def sleep_tracker(request):
+    """
+    Track sleep for authenticated user only - day view.
+    """
     background_image, button_gradient = get_background()
     motto = "Track your sleep"
 
@@ -128,7 +159,7 @@ def sleep_tracker(request):
     else:
         base_date = datetime.now().date()
 
-    blocks, sleep_time_str, hour_labels = process_day(base_date)
+    blocks, sleep_time_str, hour_labels = process_day(base_date, request.user)
 
     context = {
         'background_image': background_image,
@@ -147,7 +178,11 @@ def sleep_tracker(request):
 
     return render(request, 'sleep_day.html', context)
 
+@login_required
 def sleep_tracker_week(request):
+    """
+    Track sleep for authenticated user only - week view.
+    """
     background_image, button_gradient = get_background()
     motto = "Track your sleep"
 
@@ -164,7 +199,7 @@ def sleep_tracker_week(request):
 
     # Aggregate sleep data for each day in the week
     for day in week_days:
-        blocks, sleep_time, _ = process_day(day)
+        blocks, sleep_time, _ = process_day(day, request.user)
         week_blocks.append(blocks)
         sleep_times.append(sleep_time)
 
@@ -189,7 +224,11 @@ def sleep_tracker_week(request):
 
     return render(request, 'sleep_week.html', context)
 
+@login_required
 def sleep_tracker_month(request):
+    """
+    Track sleep for authenticated user only - month view.
+    """
     background_image, button_gradient = get_background()
 
     date_str = request.GET.get("month")
@@ -208,7 +247,7 @@ def sleep_tracker_month(request):
 
     # Aggregate sleep data for each day in the month
     for day in all_days:
-        blocks, sleep_time, _ = process_day(day)
+        blocks, sleep_time, _ = process_day(day, request.user)
         blocks_list.append(blocks)
         sleep_times.append(sleep_time)
 
@@ -234,7 +273,11 @@ def sleep_tracker_month(request):
 
 # Mood tracking views
 
+@login_required
 def mood_tracker_day(request):
+    """
+    Track mood for authenticated user only - day view.
+    """
     background_image, button_gradient = get_background()
     date_str = request.GET.get("start_date")
     if date_str:
@@ -242,7 +285,7 @@ def mood_tracker_day(request):
     else:
         base_date = datetime.now().date()
 
-    mood_log = MoodLog.objects.filter(date=base_date).first()
+    mood_log = MoodLog.objects.filter(user=request.user, date=base_date).first()
     mood_value = mood_log.mood if mood_log else None
     context = {
         'background_image': background_image,
@@ -259,7 +302,11 @@ def mood_tracker_day(request):
     }
     return render(request, 'mood_day.html', context)
 
+@login_required
 def mood_tracker_week(request):
+    """
+    Track mood for authenticated user only - week view.
+    """
     background_image, button_gradient = get_background()
     date_str = request.GET.get("week")
     if date_str:
@@ -269,7 +316,7 @@ def mood_tracker_week(request):
 
     week_start = base_date - timedelta(days=base_date.weekday())
     week_days = [week_start + timedelta(days=i) for i in range(7)]
-    mood_logs = {log.date: log for log in MoodLog.objects.filter(date__in=week_days)}
+    mood_logs = {log.date: log for log in MoodLog.objects.filter(user=request.user, date__in=week_days)}
     zipped_days_moods = [(day, mood_logs.get(day)) for day in week_days]
 
     context = {
@@ -285,7 +332,11 @@ def mood_tracker_week(request):
     }
     return render(request, 'mood_week.html', context)
 
+@login_required
 def mood_tracker_month(request):
+    """
+    Track mood for authenticated user only - month view.
+    """
     background_image, button_gradient = get_background()
     date_str = request.GET.get("month")
     if date_str:
@@ -297,7 +348,7 @@ def mood_tracker_month(request):
     month = base_date.month
     num_days = calendar.monthrange(year, month)[1]
     all_days = [date(year, month, day) for day in range(1, num_days + 1)]
-    mood_logs = {log.date: log for log in MoodLog.objects.filter(date__year=year, date__month=month)}
+    mood_logs = {log.date: log for log in MoodLog.objects.filter(user=request.user, date__year=year, date__month=month)}
     zipped_days_moods = [(day, mood_logs.get(day)) for day in all_days]
 
     # Calculate empty slots before the first day of the month (Monday=0, Sunday=6)
@@ -321,7 +372,12 @@ def mood_tracker_month(request):
 
 # Unified tracker view
 
+@login_required
 def tracker(request, section, period):
+    """
+    Unified tracker view - routes to appropriate tracker based on section and period.
+    Requires authentication.
+    """
     background_image, button_gradient = get_background()
     context = {
         'background_image': background_image,

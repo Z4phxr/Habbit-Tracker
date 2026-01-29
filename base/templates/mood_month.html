@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+{% include 'navbar.html' %}
+<div class="page-content">
+
 <div class="wrapper">
     {% include "menu.html" %}
     <div class="navigation-month" role="navigation" aria-label="Month navigation">
@@ -47,5 +50,6 @@ function navigateTo(dateStr) {
     window.location.href = url.toString();
 }
 </script>
+</div>
 </body>
 </html>

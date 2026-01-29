@@ -19,6 +19,8 @@
     </style>
 </head>
 <body style="background-image: url('{% static 'images/' %}{{ background_image }}');">
+{% include 'navbar.html' %}
+<div class="page-content">
 <div class="wrapper">
     {% include "menu.html" %}
     <div class="navigation" role="navigation" aria-label="Week navigation">
@@ -94,5 +96,7 @@
         window.location.href = url.toString();
     }
 </script>
+</div>
+</div>
 </body>
 </html>
