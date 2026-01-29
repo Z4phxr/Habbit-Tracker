@@ -151,8 +151,9 @@ def logout(request):
     # Delete the user's token to invalidate it
     try:
         request.user.auth_token.delete()
-    except Exception:
-        pass  # Token might not exist, that's ok
+    except AttributeError:
+        # Token might not exist, that's ok
+        pass
     
     return Response({
         'message': 'Logout successful'
