@@ -36,7 +36,7 @@
             <tr>
                 <th>Habit</th>
                 {% for day in days %}
-                    <th>
+                    <th onclick="navigateToDayView('{{ day|date:'Y-m-d' }}')" style="cursor: pointer;">
                         <div>{{ day|date:"D" }}</div>
                         <div>{{ day|date:"d/m" }}</div>
                     </th>
@@ -94,6 +94,10 @@
         url.searchParams.set('start_date', startDate);
         url.searchParams.set('view_mode', 'week');
         window.location.href = url.toString();
+    }
+
+    function navigateToDayView(dateStr) {
+        window.location.href = `/track/habits/day/?start_date=${dateStr}`;
     }
 </script>
 </div>

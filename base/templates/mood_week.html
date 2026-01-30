@@ -24,7 +24,7 @@
     <div style="display: flex; flex-direction: column; align-items: center; margin-top: 30px;">
         <div style="display: flex; justify-content: center; align-items: flex-end; margin-bottom: 6px; gap: 8px;">
             {% for day, mood_log in zipped_days_moods %}
-                <div style="width:48px; text-align:center; font-size:0.85rem; color:#4a5a6a; font-weight:500;">{{ day|date:"D" }}<br>{{ day|date:"d.m" }}</div>
+                <div onclick="navigateToDayView('{{ day|date:'Y-m-d' }}')" style="width:48px; text-align:center; font-size:0.85rem; color:#4a5a6a; font-weight:500; cursor: pointer;">{{ day|date:"D" }}<br>{{ day|date:"d.m" }}</div>
             {% endfor %}
         </div>
         <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
@@ -47,6 +47,9 @@ function navigateTo(dateStr) {
     const url = new URL(window.location.href);
     url.searchParams.set('week', dateStr);
     window.location.href = url.toString();
+}
+function navigateToDayView(dateStr) {
+    window.location.href = `/track/mood/day/?start_date=${dateStr}`;
 }
 </script>
 </div>

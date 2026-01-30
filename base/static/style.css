@@ -87,7 +87,7 @@ body {
 /* Gradient Buttons for Navbar */
 .navbar-link.navbar-habits {
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(17, 153, 142, 0.4);
 }
 
@@ -98,7 +98,7 @@ body {
 
 .navbar-link.navbar-sleep {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
 }
 
@@ -109,7 +109,7 @@ body {
 
 .navbar-link.navbar-mood {
     background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(250, 112, 154, 0.4);
 }
 
@@ -131,7 +131,7 @@ body {
 
 .navbar-link.navbar-register {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
@@ -143,7 +143,7 @@ body {
 
 .navbar-link.navbar-logout {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
 }
 
@@ -151,6 +151,10 @@ body {
     background: linear-gradient(135deg, #e082ea 0%, #e4465b 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
+}
+
+.navbar-link.active {
+    color: white;
 }
 
 /* Page Content Wrapper */
@@ -393,19 +397,33 @@ input[type="checkbox"] {
 }
 
 .form-button {
-    background: linear-gradient(90deg, #6a8dff, #b8e1fc);
-    color: #fff;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
     border: none;
-    border-radius: 6px;
-    padding: 8px 24px;
+    border-radius: 10px;
+    padding: 10px 20px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
 }
 
 .form-button:hover {
-    background: linear-gradient(90deg, #4e6ed6, #a0c4e8);
+    background: linear-gradient(135deg, #3d94e5 0%, #00d9e5 100%);
+    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.5);
+    transform: translateY(-2px);
+}
+
+.form-button.delete {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
+}
+
+.form-button.delete:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
+    transform: translateY(-2px);
 }
 
 /* Headings & Navigation */
@@ -703,6 +721,132 @@ input[type="checkbox"] {
     height: 60px;
 }
 
+/* Sleep Week/Month - Compact View */
+.sleep-compact-view {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px 0;
+}
+
+.sleep-hour-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid rgba(108, 122, 138, 0.15);
+}
+
+.hour-line-spacer {
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.hour-line-spacer-right {
+    width: 70px;
+    flex-shrink: 0;
+}
+
+.hour-line-labels {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.hour-line-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c7a8a;
+    opacity: 0.8;
+}
+
+.hour-line-middle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.sleep-compact-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    transition: background 0.2s ease;
+    border-radius: 8px;
+}
+
+.sleep-compact-row:hover {
+    background: rgba(250, 252, 255, 0.5);
+}
+
+.compact-date {
+    width: 80px;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.compact-slider {
+    flex: 1;
+    min-width: 0;
+}
+
+.slider-track-compact {
+    display: flex;
+    height: 20px;
+    border-radius: 6px;
+    background: #dce4ec;
+    overflow: hidden;
+}
+
+.slider-segment-compact {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+}
+
+.slider-segment-compact.slept {
+    /* Background set by inline style with button_gradient */
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.compact-duration {
+    width: 70px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4a5a6a;
+}
+
+/* Mobile adjustments for compact view */
+@media (max-width: 768px) {
+    .hour-line-spacer {
+        width: 60px;
+    }
+    
+    .hour-line-spacer-right {
+        width: 55px;
+    }
+    
+    .compact-date {
+        width: 60px;
+        font-size: 0.8rem;
+    }
+    
+    .compact-duration {
+        width: 55px;
+        font-size: 0.8rem;
+    }
+    
+    .slider-track-compact {
+        height: 18px;
+    }
+}
+
 /* Sleep Month/Week Table Block Size */
 .week-table .block,
 .month-table .block {
@@ -710,6 +854,13 @@ input[type="checkbox"] {
     height: 28px;
     border-radius: 6px;
     margin: 0 auto;
+    background-color: #d3d3d3;
+}
+
+.week-table .block.slept,
+.month-table .block.slept {
+    /* Background set by inline style with button_gradient */
+    box-shadow: 0 2px 6px rgba(79, 172, 254, 0.3);
 }
 
 .week-table thead tr {
@@ -797,6 +948,102 @@ input[type="checkbox"] {
     border-radius: 8px;
     margin-bottom: 10px;
     font-size: 0.95rem;
+}
+
+/* 24-hour range slider for Sleep Day */
+.range-slider-card {
+    background: rgba(250, 252, 255, 0.9);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 6px 18px rgba(30,45,60,0.06);
+}
+.range-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.range-title { margin: 0; font-size: 1.1rem; font-weight: 700; color: #1f2d3d; }
+.range-summary { color: #4a5a6a; font-weight: 600; font-size: 0.95rem; }
+
+.time-slider { width: 100%; padding: 12px 4px 8px 4px; box-sizing: border-box; }
+.time-slider .ticks { height: 18px; margin-bottom: 6px; position: relative; }
+.time-slider .ticks::before { content: ''; display:block; height:1px; background:#e6eef6; width:100%; position: absolute; top:9px; left:0; }
+.time-slider .track { position: relative; height: 34px; border-radius: 10px; background: #dce4ec; margin: 0 4px; }
+.time-slider .selected-range { position: absolute; top: 6px; height: 22px; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4); transition: left 0.12s ease, width 0.12s ease, background 0.2s ease; }
+.time-slider .selected-range:hover { style="background: {{ button_gradient }};"; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.5); }
+.time-slider .handle { position: absolute; top: 0; transform: translateX(-50%); width: 34px; height: 34px; border-radius: 50%; border: none; box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3); display:flex; align-items:center; justify-content:center; cursor:grab; transition: all 0.2s ease; color: white; }
+.time-slider .handle:hover { box-shadow: 0 4px 12px rgba(79, 172, 254, 0.5); transform: translateX(-50%) translateY(-2px); }
+.time-slider .handle:active { cursor:grabbing; }
+.time-slider .handle:focus { outline: 3px solid rgba(79, 172, 254, 0.3); }
+.handle-label { display:none; font-size:0.65rem; }
+
+/* Time labels above slider */
+.time-labels-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 0 4px;
+}
+
+.time-label {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.time-label-start {
+    text-align: left;
+}
+
+.time-label-end {
+    text-align: right;
+}
+
+/* Duration label below slider */
+.duration-container {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.duration-label {
+    font-weight: 600;
+    color: #4a5a6a;
+    font-size: 1rem;
+}
+
+/* Scale labels below slider track */
+.scale-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding: 0 4px;
+}
+
+.scale-time {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c7a8a;
+    opacity: 0.8;
+}
+
+.scale-time.scale-middle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Tick marks: draw hourly ticks using repeating-linear-gradient as background for the ticks bar */
+.time-slider .ticks { background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(100%/24 - 1px), rgba(74,90,106,0.06) calc(100%/24 - 1px), rgba(74,90,106,0.06) calc(100%/24)); background-size: 100% 100%; }
+
+/* Mobile adjustments */
+@media (max-width: 520px) {
+    .time-slider .handle { width: 40px; height: 40px; }
+    .time-slider .selected-range { top: 8px; height: 24px; }
+    .time-label { font-size: 0.9rem; }
 }
 
 .alert-error {

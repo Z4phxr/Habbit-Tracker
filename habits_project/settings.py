@@ -29,7 +29,9 @@ TESTING = 'test' in sys.argv
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-oe+ry=g@@c!)y&h=b5$fdlvpl8fg&2=s4)*w31m2k$m@-um7-5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# Default to DEBUG=True for local development unless explicitly overridden
+# Production should set the environment variable `DEBUG=False`.
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Parse ALLOWED_HOSTS and add testserver for testing
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
@@ -206,8 +208,27 @@ if not DEBUG and not TESTING:
     # Proxy settings (if behind a reverse proxy)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 else:
-    # Disable HTTPS redirects for development and testing
+    # Development / Testing: explicitly disable all HTTPS enforcement so
+    # the Django development server runs over plain HTTP.
+    #
+    # Why: Earlier `DEBUG` defaulted to False which caused the production
+    # branch to run locally, enabling `SECURE_SSL_REDIRECT` and producing
+    # redirects from http:// -> https:// (causing ERR_SSL_PROTOCOL_ERROR
+    # because the dev server doesn't serve HTTPS). Making DEBUG default to
+    # True and explicitly turning off these settings in this branch ensures
+    # HTTP-only behavior in development while preserving production security.
     SECURE_SSL_REDIRECT = False
+    SECURE_PROXY_SSL_HEADER = None
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_BROWSER_XSS_FILTER = False
+    SECURE_CONTENT_TYPE_NOSNIFF = False
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+    # Disable HSTS in development
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
 
 
 # Logging configuration

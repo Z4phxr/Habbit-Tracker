@@ -23,193 +23,387 @@
         </div>
 
     <div class="sleep-timeline-container">
-        <div class="hour-line" id="hour-line">
-            {% for hour in hour_labels %}
-                <div class="hour">{{ hour }}</div>
-            {% endfor %}
-        </div>
-
-        <div class="timeline" id="timeline">
+        {# Serialized blocks data (labels + slept) so JS can initialize the slider exactly like previous block selection #}
+        <script id="blocks-data" type="application/json">[
             {% for block in blocks %}
-                <div class="block {% if block.slept %}slept{% endif %}"
-                     data-index="{{ forloop.counter0 }}"
-                     data-label="{{ block.label }}"
-                     {% if block.slept %}style="background: {{ button_gradient }}; color: white;"{% endif %}>
-                </div>
+                {"label": "{{ block.label }}", "slept": {% if block.slept %}true{% else %}false{% endif %}}{% if not forloop.last %},{% endif %}
             {% endfor %}
-        </div>
+        ]</script>
 
-        <div class="form-submit">
-            <button id="save_sleep" class="form-button" style="background: {{ button_gradient }};">Save</button>
-            <button id="delete_sleep" class="form-button" style="background: {{ button_gradient }};">Delete</button>
-            {% if sleep_time_str %}
-                <div id="sleep_summary">Saved sleep time: {{ sleep_time_str }}</div>
-            {% endif %}
-            <p id="selection_status"></p>
+        <div class="range-slider-card">
+            <div class="range-header">
+                <h3 class="range-title">Log sleep for {{ days.0|date:"j F Y" }}</h3>
+                <div id="range-summary" class="range-summary">Sleep: — → —</div>
+            </div>
+
+            <div id="time-slider" class="time-slider" role="application" aria-label="24 hour sleep range">
+                <div class="time-labels-top">
+                    <div id="start-time-label" class="time-label time-label-start">00:00</div>
+                    <div id="end-time-label" class="time-label time-label-end">00:00</div>
+                </div>
+
+                <div class="ticks" aria-hidden="true"></div>
+
+                <div class="track" id="slider-track">
+                    <div class="selected-range" id="selected-range" style="background: {{ button_gradient }};"></div>
+                    <button class="handle handle-start" id="handle-start" aria-label="Start time" aria-describedby="start-time-label" tabindex="0" style="background: {{ button_gradient }};"><span class="handle-label">Start</span></button>
+                    <button class="handle handle-end" id="handle-end" aria-label="End time" aria-describedby="end-time-label" tabindex="0" style="background: {{ button_gradient }};"><span class="handle-label">End</span></button>
+                </div>
+
+                <div class="scale-labels">
+                    <span class="scale-time">6PM</span>
+                    <span class="scale-time scale-middle">6AM</span>
+                    <span class="scale-time">6PM</span>
+                </div>
+
+                <div class="duration-container">
+                    <div id="duration-label" class="duration-label">Duration: —</div>
+                </div>
+            </div>
+
+            <div class="form-submit">
+                <button id="save_sleep" class="form-button" style="background: {{ button_gradient }};">Save</button>
+                <button id="delete_sleep" class="form-button delete" style="background: {{ button_gradient }};">Delete</button>
+                {% if sleep_time_str %}
+                    <div id="sleep_summary">Saved sleep time: {{ sleep_time_str }}</div>
+                {% endif %}
+                <p id="selection_status" aria-live="polite"></p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let isDragging = false;
-    let startIdx = null;
-    let endIdx = null;
+document.addEventListener('DOMContentLoaded', () => {
+    const blocksDataEl = document.getElementById('blocks-data');
+    const blocks = blocksDataEl ? JSON.parse(blocksDataEl.textContent || '[]') : [];
+    const status = document.getElementById('selection_status');
 
-    const blocks = document.querySelectorAll(".block");
-    const status = document.getElementById("selection_status");
-    const buttonGradient = "{{ button_gradient }}";
+    // Elements
+    const track = document.getElementById('slider-track');
+    const selectedRange = document.getElementById('selected-range');
+    const handleStart = document.getElementById('handle-start');
+    const handleEnd = document.getElementById('handle-end');
+    const startLabel = document.getElementById('start-time-label');
+    const endLabel = document.getElementById('end-time-label');
+    const durationLabel = document.getElementById('duration-label');
+    const rangeSummary = document.getElementById('range-summary');
 
-    blocks.forEach(block => {
-        block.addEventListener("mousedown", e => {
-            isDragging = true;
-            startIdx = parseInt(block.dataset.index);
-            endIdx = startIdx;
-            updateHighlight();
-            e.preventDefault();
-        });
+    // State in minutes from 6PM (18:00) - slider range is [0..1440) representing 18:00 today → 18:00 tomorrow
+    let startMin = null;
+    let endMin = null;
+    let activeHandle = null; // 'start'|'end'|null
 
-        block.addEventListener("mouseover", e => {
-            if (isDragging) {
-                endIdx = parseInt(block.dataset.index);
-                updateHighlight();
+    const TRACK_LENGTH_MIN = 1440; // minutes in a day
+    const STEP_MIN = 10; // 10-minute increments
+    const START_HOUR = 18; // Start at 6 PM
+    const START_OFFSET = START_HOUR * 60; // 1080 minutes - offset to start slider at 6pm
+
+    // Initialize from blocks (to preserve previous saved selections exactly)
+    (function initFromBlocks() {
+        const sleptIdx = blocks.reduce((acc, b, i) => (b.slept ? acc.concat(i) : acc), []);
+        if (sleptIdx.length) {
+            const first = blocks[sleptIdx[0]].label; // e.g. "22:00"
+            const last = blocks[sleptIdx[sleptIdx.length - 1]].label; // last block label
+            const [fh, fm] = first.split(':').map(Number);
+            const [lh, lm] = last.split(':').map(Number);
+            // Convert from midnight-based clock time to slider position
+            let startMidnight = fh * 60 + fm;
+            // End time: add 1 hour to last block to get the end time
+            let endMidnight = lh * 60 + lm + 60; // Add 60 minutes instead of doing (lh+1)*60
+            // Handle wrap-around past midnight
+            if (endMidnight >= 1440) {
+                endMidnight = endMidnight - 1440;
             }
-        });
-    });
-
-    document.addEventListener("mouseup", () => {
-        if (isDragging) {
-            isDragging = false;
-            showStatus();
+            startMin = convertMidnightToSlider(startMidnight);
+            endMin = convertMidnightToSlider(endMidnight);
         }
-    });
+    })();
 
-    function updateHighlight() {
-        const [from, to] = [startIdx, endIdx].sort((a, b) => a - b);
-        blocks.forEach((b, i) => {
-            if (i >= from && i <= to) {
-                b.classList.add("slept");
-                b.style.background = buttonGradient;
-                b.style.color = "white";
-            } else {
-                b.classList.remove("slept");
-                b.style.background = "";
-                b.style.color = "";
-            }
-        });
+    // Convert midnight-based time (0=00:00) to slider position (0=18:00)
+    function convertMidnightToSlider(midnightMin) {
+        if (midnightMin >= START_OFFSET) {
+            // Evening: 18:00-23:59 → slider 0-359
+            return midnightMin - START_OFFSET;
+        } else {
+            // Morning/afternoon: 00:00-17:59 → slider 360-1439
+            return midnightMin + (TRACK_LENGTH_MIN - START_OFFSET);
+        }
     }
 
-    function showStatus() {
-        if (startIdx === null || endIdx === null) return;
-
-        const [from, to] = [startIdx, endIdx].sort((a, b) => a - b);
-        const startLabel = blocks[from].dataset.label;
-
-        function addHour(label) {
-            let [hour, minute] = label.split(':').map(Number);
-            hour = (hour + 1) % 24;
-            return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    // Convert slider position (0=18:00) to midnight-based time (0=00:00)
+    function convertSliderToMidnight(sliderMin) {
+        const midnightOffset = TRACK_LENGTH_MIN - START_OFFSET; // 360 minutes (6 hours)
+        if (sliderMin < midnightOffset) {
+            // First part of slider (18:00-23:59)
+            return sliderMin + START_OFFSET;
+        } else {
+            // Second part of slider (00:00-17:59)
+            return sliderMin - midnightOffset;
         }
-
-        const endLabel = addHour(blocks[to].dataset.label);
-        status.textContent = `Selected range: ${startLabel} – ${endLabel}`;
     }
 
-    document.getElementById("save_sleep").addEventListener("click", async () => {
-        if (startIdx === null || endIdx === null) {
-            status.textContent = "❌ Select a sleep range.";
+    function clamp(n, a, b) { return Math.min(Math.max(n, a), b); }
+    function snapToStep(mins) { return Math.round(mins / STEP_MIN) * STEP_MIN; }
+    function minutesToPercent(m) { return (m / TRACK_LENGTH_MIN) * 100; }
+    function percentToMinutes(p) { 
+        const mins = clamp(Math.round(p / 100 * TRACK_LENGTH_MIN), 0, TRACK_LENGTH_MIN - 1);
+        return snapToStep(mins);
+    }
+    
+    // Format time for display - shows actual clock time with next-day indicator
+    function formatHM(sliderMins) {
+        const midnightMins = convertSliderToMidnight(sliderMins);
+        const h = Math.floor(midnightMins / 60).toString().padStart(2, '0');
+        const m = (midnightMins % 60).toString().padStart(2, '0');
+        // Next day if we've passed midnight (slider position >= 360, which is 00:00)
+        const midnightOffset = TRACK_LENGTH_MIN - START_OFFSET; // 360 minutes
+        const isNextDay = sliderMins >= midnightOffset;
+        return `${h}:${m}${isNextDay ? ' +1' : ''}`;
+    }
+
+    function updateUI() {
+        if (startMin === null || endMin === null) {
+            startLabel.textContent = '—';
+            endLabel.textContent = '—';
+            durationLabel.textContent = 'Duration: —';
+            rangeSummary.textContent = 'Sleep: — → —';
+            selectedRange.style.width = '0%';
+            selectedRange.style.left = '0%';
             return;
         }
 
-        // Get the displayed date from the page context
-        // Example: "28 Jul 2025"
-        const currentDateStr = "{{ current_date }}";
-        // Parse to JS Date
-        const [day, monthStr, year] = currentDateStr.split(" ");
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const leftPct = minutesToPercent(startMin);
+        const rightPct = minutesToPercent(endMin);
+
+        // Calculate selected range - always draws forward from start to end
+        if (endMin > startMin) {
+            selectedRange.style.left = `${leftPct}%`;
+            selectedRange.style.width = `${rightPct - leftPct}%`;
+        } else if (endMin === startMin) {
+            // Zero duration
+            selectedRange.style.left = `${leftPct}%`;
+            selectedRange.style.width = '0%';
+        } else {
+            // endMin < startMin: wrap around (goes past end of track)
+            selectedRange.style.left = `${leftPct}%`;
+            selectedRange.style.width = `${100 - leftPct + rightPct}%`;
+        }
+
+        handleStart.style.left = `${leftPct}%`;
+        handleEnd.style.left = `${rightPct}%`;
+
+        startLabel.textContent = formatHM(startMin);
+        endLabel.textContent = formatHM(endMin);
+
+        // Calculate duration
+        let durationMin = endMin - startMin;
+        if (durationMin <= 0) {
+            durationMin = endMin + TRACK_LENGTH_MIN - startMin;
+        }
+        const hours = Math.floor(durationMin / 60);
+        const minutes = durationMin % 60;
+        durationLabel.textContent = `Duration: ${hours}h ${minutes.toString().padStart(2,'0')}m`;
+        
+        // Summary text
+        const startFormatted = formatHM(startMin);
+        const endFormatted = formatHM(endMin);
+        rangeSummary.textContent = `Sleep: ${startFormatted} → ${endFormatted}`;
+    }
+
+    // Pointer handling with crossover swapping
+    function pageXToMinutes(pageX) {
+        const rect = track.getBoundingClientRect();
+        const p = clamp((pageX - rect.left) / rect.width * 100, 0, 100);
+        return percentToMinutes(p);
+    }
+
+    function startDrag(handle, event) {
+        activeHandle = handle;
+        handle.setPointerCapture(event.pointerId);
+    }
+
+    function onPointerMove(e) {
+        if (!activeHandle) return;
+        const mins = pageXToMinutes(e.pageX);
+        
+        if (activeHandle === 'start') {
+            startMin = mins;
+            // Check if start handle crossed past end handle - swap roles
+            if (startMin > endMin) {
+                [startMin, endMin] = [endMin, startMin];
+                activeHandle = 'end'; // Continue dragging as end handle
+            }
+        } else {
+            endMin = mins;
+            // Check if end handle crossed past start handle - swap roles
+            if (endMin < startMin) {
+                [startMin, endMin] = [endMin, startMin];
+                activeHandle = 'start'; // Continue dragging as start handle
+            }
+        }
+        updateUI();
+    }
+
+    function endDrag(e) {
+        if (!activeHandle) return;
+        activeHandle = null;
+    }
+
+    handleStart.addEventListener('pointerdown', (e) => startDrag('start', e));
+    handleEnd.addEventListener('pointerdown', (e) => startDrag('end', e));
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', endDrag);
+
+    // Clicking the track sets nearest handle (or sets start then end if none)
+    track.addEventListener('click', (e) => {
+        if (e.target.classList.contains('handle')) return; // Don't process clicks on handles
+        
+        const mins = pageXToMinutes(e.pageX);
+        if (startMin === null && endMin === null) {
+            startMin = mins;
+            endMin = snapToStep((mins + 60) % TRACK_LENGTH_MIN); // default 1 hour
+        } else {
+            // Find nearest handle and move it
+            const dStart = Math.min(Math.abs(mins - startMin), TRACK_LENGTH_MIN - Math.abs(mins - startMin));
+            const dEnd = Math.min(Math.abs(mins - endMin), TRACK_LENGTH_MIN - Math.abs(mins - endMin));
+            if (dStart <= dEnd) {
+                startMin = mins;
+                // Check for crossover after click
+                if (startMin > endMin) {
+                    [startMin, endMin] = [endMin, startMin];
+                }
+            } else {
+                endMin = mins;
+                // Check for crossover after click
+                if (endMin < startMin) {
+                    [startMin, endMin] = [endMin, startMin];
+                }
+            }
+        }
+        updateUI();
+    });
+
+    // Keyboard support with 10-minute steps
+    function handleKey(e, which) {
+        let delta = 0;
+        if (e.key === 'ArrowLeft') delta = -STEP_MIN;
+        if (e.key === 'ArrowRight') delta = STEP_MIN;
+        if (e.shiftKey) delta *= 6; // Shift -> 60min
+        if (delta === 0) return;
+        e.preventDefault();
+        
+        if (which === 'start') {
+            startMin = snapToStep(clamp(startMin + delta, 0, TRACK_LENGTH_MIN - STEP_MIN));
+            // Check for crossover
+            if (startMin > endMin) {
+                [startMin, endMin] = [endMin, startMin];
+            }
+        } else {
+            endMin = snapToStep(clamp(endMin + delta, 0, TRACK_LENGTH_MIN - STEP_MIN));
+            // Check for crossover
+            if (endMin < startMin) {
+                [startMin, endMin] = [endMin, startMin];
+            }
+        }
+        updateUI();
+    }
+
+    handleStart.addEventListener('keydown', (e) => handleKey(e, 'start'));
+    handleEnd.addEventListener('keydown', (e) => handleKey(e, 'end'));
+
+    // Initialize UI with sensible default: 23:00 -> 07:00
+    if (startMin === null || endMin === null) {
+        // 23:00 is 5 hours after 18:00 = 300 minutes on slider
+        // 07:00 next day is 13 hours after 18:00 = 780 minutes on slider
+        startMin = 5 * 60;  // 23:00 (300)
+        endMin = 13 * 60;   // 07:00 next day (780)
+    }
+    updateUI();
+
+    // Save logic: convert slider minutes back to actual clock time
+    document.getElementById('save_sleep').addEventListener('click', () => {
+        if (startMin === null || endMin === null) {
+            status.textContent = '❌ Select a sleep range.';
+            return;
+        }
+
+        // Parse displayed date
+        const currentDateStr = "{{ current_date }}"; // e.g. "28 Jul 2025"
+        const [day, monthStr, year] = currentDateStr.split(' ');
+        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const month = monthNames.indexOf(monthStr);
         const baseDate = new Date(parseInt(year), month, parseInt(day));
 
-        // Get start and end labels from blocks
-        const startLabel = blocks[startIdx].dataset.label;
-        const endLabel = blocks[endIdx].dataset.label;
+        const startMidnight = convertSliderToMidnight(startMin);
+        const endMidnight = convertSliderToMidnight(endMin);
 
-        // Helper to create a Date from baseDate and label
-        function dateWithLabel(date, label) {
-            let [hour, minute] = label.split(':').map(Number);
-            let d = new Date(date);
-            d.setHours(hour, minute, 0, 0);
+        function dateFromMinutes(base, midnightMins, isNextDay) {
+            const d = new Date(base);
+            const h = Math.floor(midnightMins / 60) % 24;
+            const m = midnightMins % 60;
+            d.setHours(h, m, 0, 0);
+            if (isNextDay) {
+                d.setDate(d.getDate() + 1);
+            }
             return d;
         }
 
-        // Start time
-        const startDate = dateWithLabel(baseDate, startLabel);
-
-        // End time: add 1 hour to the last block's label
-        let [endHour, endMinute] = endLabel.split(':').map(Number);
-        endHour = (endHour + 1) % 24;
-        const endDate = new Date(baseDate);
-        endDate.setHours(endHour, endMinute, 0, 0);
-
-        // If endHour < startHour, it means the sleep ended next day
-        if (endHour <= parseInt(startLabel.split(':')[0])) {
+        // Determine if times cross into next day
+        // The slider represents 18:00 on baseDate to 18:00 on baseDate+1
+        // Times from 00:00-17:59 (clock) are considered same calendar day as baseDate
+        // Only times that wrap from evening->morning need day increment
+        
+        const startDate = dateFromMinutes(baseDate, startMidnight, false);
+        let endDate = dateFromMinutes(baseDate, endMidnight, false);
+        
+        // If end position is before start position on slider, end wraps to next day
+        if (endMin < startMin) {
+            endDate.setDate(endDate.getDate() + 1);
+        }
+        // If start is in evening (before midnight on slider) and end is in morning (after midnight), add day to end
+        else if (startMin < (TRACK_LENGTH_MIN - START_OFFSET) && endMin >= (TRACK_LENGTH_MIN - START_OFFSET)) {
             endDate.setDate(endDate.getDate() + 1);
         }
 
-        // Convert to UTC ISO string
-        const payload = {
-            start: toLocalISOString(startDate),
-            end: toLocalISOString(endDate)
-        };
+        const payload = { start: toLocalISOString(startDate), end: toLocalISOString(endDate) };
 
-        fetch("/api/sleep/", {
-            method: "POST",
+        fetch('/api/sleep/', {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
             },
             body: JSON.stringify(payload)
         })
         .then(res => res.json())
         .then(data => {
             if (data.duration) {
-                status.textContent = "Sleep saved!";
-                // Update sleep summary immediately
-                const summary = document.getElementById("sleep_summary");
+                status.textContent = 'Sleep saved!';
+                const summary = document.getElementById('sleep_summary');
                 if (summary) {
                     summary.textContent = `Saved sleep time: ${data.duration}`;
-                } else {
-                    // If not present, create and insert it
-                    const newSummary = document.createElement("div");
-                    newSummary.id = "sleep_summary";
-                    newSummary.textContent = `Saved sleep time: ${data.duration}`;
-                    newSummary.style.textAlign = "center";
-                    newSummary.style.marginTop = "10px";
-                    newSummary.style.fontSize = "1rem";
-                    newSummary.style.fontWeight = "600";
-                    document.querySelector(".form-submit").insertBefore(newSummary, status);
                 }
             } else {
-                status.textContent = "Save error.";
+                status.textContent = 'Save error.';
             }
         })
         .catch(() => {
-            status.textContent = "API connection error.";
+            status.textContent = 'API connection error.';
         });
     });
 
-    document.getElementById("delete_sleep").addEventListener("click", async () => {
-        // Get the displayed date in YYYY-MM-DD format
+    // Delete behavior unchanged
+    document.getElementById('delete_sleep').addEventListener('click', () => {
         const currentDateStr = "{{ current_date }}";
-        const [day, monthStr, year] = currentDateStr.split(" ");
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const [day, monthStr, year] = currentDateStr.split(' ');
+        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const month = monthNames.indexOf(monthStr) + 1;
-        const dateParam = `${year}-${month.toString().padStart(2, '0')}-${day.padStart(2, '0')}`;
+        const dateParam = `${year}-${month.toString().padStart(2,'0')}-${day.padStart(2,'0')}`;
 
         fetch(`/api/sleep/delete_day/?date=${dateParam}`, {
-            method: "DELETE",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}"
-            }
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
         })
         .then(res => res.json())
         .then(data => {
@@ -217,24 +411,28 @@
                 status.textContent = `Deleted ${data.deleted} sleep log(s) for this day.`;
                 setTimeout(() => location.reload(), 800);
             } else {
-                status.textContent = "No sleep logs found for this day.";
+                status.textContent = 'No sleep logs found for this day.';
             }
         })
         .catch(() => {
-            status.textContent = "API connection error.";
+            status.textContent = 'API connection error.';
         });
     });
 
+    // Helper (preserve same formatting as before)
     function toLocalISOString(date) {
         const pad = n => n.toString().padStart(2, '0');
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
     }
 
-    function navigateTo(dateStr) {
+    // Navigation helper preserved
+    window.navigateTo = function(dateStr) {
         const url = new URL(window.location.href);
         url.searchParams.set('start_date', dateStr);
         window.location.href = url.toString();
-    }
+    };
+
+});
 </script>
 </div>
 </body>
