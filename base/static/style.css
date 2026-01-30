@@ -87,7 +87,7 @@ body {
 /* Gradient Buttons for Navbar */
 .navbar-link.navbar-habits {
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(17, 153, 142, 0.4);
 }
 
@@ -98,7 +98,7 @@ body {
 
 .navbar-link.navbar-sleep {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
 }
 
@@ -109,7 +109,7 @@ body {
 
 .navbar-link.navbar-mood {
     background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(250, 112, 154, 0.4);
 }
 
@@ -131,7 +131,7 @@ body {
 
 .navbar-link.navbar-register {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
 }
 
@@ -143,7 +143,7 @@ body {
 
 .navbar-link.navbar-logout {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    color: #1f2d3d;
     box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
 }
 
@@ -151,6 +151,10 @@ body {
     background: linear-gradient(135deg, #e082ea 0%, #e4465b 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
+}
+
+.navbar-link.active {
+    color: white;
 }
 
 /* Page Content Wrapper */
