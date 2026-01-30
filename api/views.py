@@ -165,12 +165,26 @@ def get_sleep_logs(request):
 @api_view(['POST'])
 def sleep_log_create(request):
     """
-    Create a new sleep log for authenticated user. Always adds, does not replace.
+    Create a new sleep log for authenticated user. Deletes previous log for the same night period.
     """
     data = json.loads(request.body)
     # Parse ISO datetime strings with Z suffix (UTC)
     start = parse_datetime(data['start'])
     end = parse_datetime(data['end'])
+    
+    # Delete any existing sleep logs that overlap with this night period
+    # Determine which "night" this belongs to (based on end time - when you wake up)
+    sleep_date = end.date()
+    night_start = make_aware(datetime.combine(sleep_date - timedelta(days=1), time(18, 0)))
+    night_end = night_start + timedelta(hours=24)
+    
+    # Delete overlapping logs for this user in this night period
+    SleepLog.objects.filter(
+        user=request.user,
+        start__lt=night_end,
+        end__gt=night_start
+    ).delete()
+    
     log = SleepLog.objects.create(user=request.user, start=start, end=end)
     duration = (end - start).total_seconds() / 3600
     return Response({'id': log.id, 'duration': duration}, status=status.HTTP_201_CREATED)

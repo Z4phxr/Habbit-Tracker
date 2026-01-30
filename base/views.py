@@ -149,16 +149,20 @@ def process_day(day: datetime, user):
 def sleep_tracker(request):
     """
     Track sleep for authenticated user only - day view.
+    Shows the night starting at 18:00 the day before and labeled as the wake-up day.
     """
     background_image, button_gradient = get_background()
     motto = "Track your sleep"
 
     date_str = request.GET.get("start_date")
     if date_str:
-        base_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        display_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     else:
-        base_date = datetime.now().date()
-
+        display_date = datetime.now().date()
+    
+    # The night period calculation: 18:00 on (display_date - 1) to 18:00 on display_date
+    # This represents the night before waking up on display_date
+    base_date = display_date - timedelta(days=1)
     blocks, sleep_time_str, hour_labels = process_day(base_date, request.user)
 
     context = {
@@ -168,10 +172,10 @@ def sleep_tracker(request):
         'blocks': blocks,
         'sleep_time_str': sleep_time_str,
         'hour_labels': hour_labels,
-        'current_date': base_date.strftime("%d %b %Y"),
-        'days': [base_date],  # Added for template date display
-        'prev_start': (base_date - timedelta(days=1)),
-        'next_start': (base_date + timedelta(days=1)),
+        'current_date': display_date.strftime("%d %b %Y"),  # Show the wake-up date
+        'days': [display_date],  # Show wake-up date for consistency
+        'prev_start': (display_date - timedelta(days=1)),
+        'next_start': (display_date + timedelta(days=1)),
         'active_section': 'sleep',
         'active_period': 'day',
     }

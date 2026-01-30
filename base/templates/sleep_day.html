@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             endDate.setDate(endDate.getDate() + 1);
         }
 
-        const payload = { start: toLocalISOString(startDate), end: toLocalISOString(endDate) };
+        const payload = { start: startDate.toISOString(), end: endDate.toISOString() };
 
         fetch('/api/sleep/', {
             method: 'POST',
@@ -380,10 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             if (data.duration) {
                 status.textContent = 'Sleep saved!';
-                const summary = document.getElementById('sleep_summary');
-                if (summary) {
-                    summary.textContent = `Saved sleep time: ${data.duration}`;
-                }
+                setTimeout(() => location.reload(), 500);
             } else {
                 status.textContent = 'Save error.';
             }
