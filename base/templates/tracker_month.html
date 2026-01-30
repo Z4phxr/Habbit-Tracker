@@ -32,7 +32,7 @@
                     <tr>
                         <th class="th-month" style="min-width: 120px;"><div>Habit</div></th>
                         {% for day in days %}
-                            <th class="th-month"><div>{{ day|date:"d/m" }}</div></th>
+                            <th class="th-month" onclick="navigateToDayView('{{ day|date:'Y-m-d' }}')" style="cursor: pointer;"><div>{{ day|date:"d/m" }}</div></th>
                         {% endfor %}
                     </tr>
                 </thead>
@@ -90,6 +90,10 @@
             url.searchParams.set('start_date', dateStr);
             url.searchParams.set('view_mode', 'month');
             window.location.href = url.toString();
+        }
+
+        function navigateToDayView(dateStr) {
+            window.location.href = `/track/habits/day/?start_date=${dateStr}`;
         }
     </script>
 </div>

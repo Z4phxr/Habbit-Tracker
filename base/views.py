@@ -107,11 +107,11 @@ def track_habits(request, view_mode='week'):
 def process_day(day: datetime, user):
     """
     Process sleep data for a specific day and user.
-    Calculate the night period (20:00 previous day to 12:00 current day).
+    Calculate the night period (18:00 current day to 18:00 next day).
     """
-    # Calculate the night period (20:00 previous day to 12:00 current day)
-    night_start = make_aware(datetime.combine(day - timedelta(days=1), time(20, 0)))
-    night_end = night_start + timedelta(hours=16)
+    # Calculate the period (18:00 current day to 18:00 next day) - 24 hours
+    night_start = make_aware(datetime.combine(day, time(18, 0)))
+    night_end = night_start + timedelta(hours=24)
 
     logs = SleepLog.objects.filter(
         user=user,
@@ -130,10 +130,10 @@ def process_day(day: datetime, user):
     minutes = (total_sleep.seconds % 3600) // 60
     sleep_time_str = f"{hours}h {minutes}min" if total_sleep else "–"
 
-    # Split night into 16 hourly blocks and mark if slept
+    # Split into 24 hourly blocks and mark if slept
     blocks = []
     current = night_start
-    for _ in range(16):
+    for _ in range(24):
         block_end = current + timedelta(hours=1)
         slept = log and log.start < block_end and log.end > current
         blocks.append({
@@ -142,7 +142,7 @@ def process_day(day: datetime, user):
         })
         current = block_end
 
-    hour_labels = [(night_start + timedelta(hours=i)).strftime("%H:%M") for i in range(17)]
+    hour_labels = [(night_start + timedelta(hours=i)).strftime("%H:%M") for i in range(25)]
     return blocks, sleep_time_str, hour_labels
 
 @login_required

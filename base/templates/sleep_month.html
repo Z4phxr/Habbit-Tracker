@@ -20,33 +20,32 @@
         <img src="{% static 'images/arrow_r.png' %}" alt="Next month" class="nav-arrow-month" onclick="navigateTo('{{ next_month }}')" />
     </div>
     <div class="sleep-timeline-container">
-        <table class="week-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    {% for hour in hour_labels %}
-                        <th class="hour-label">{{ hour }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for day, blocks, sleep_time in zipped_days_blocks %}
-                    <tr>
-                        <td class="day-label">{{ day|date:"D, d.m" }}</td>
-                        {% for block in blocks %}
-                            <td>
-                                {% if block.slept %}
-                                    <div class="block slept" style="background: {{ button_gradient }};"></div>
-                                {% else %}
-                                    <div class="block"></div>
-                                {% endif %}
-                            </td>
-                        {% endfor %}
-                        <td>{{ sleep_time }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="sleep-compact-view">
+            <div class="sleep-hour-line">
+                <div class="hour-line-spacer"></div>
+                <div class="hour-line-labels">
+                    <span class="hour-line-label">6PM</span>
+                    <span class="hour-line-label hour-line-middle">6AM</span>
+                    <span class="hour-line-label">6PM</span>
+                </div>
+                <div class="hour-line-spacer-right"></div>
+            </div>
+            
+            {% for day, blocks, sleep_time in zipped_days_blocks %}
+                <div class="sleep-compact-row">
+                    <div class="compact-date" onclick="navigateToDayView('{{ day|date:'Y-m-d' }}')">{{ day|date:"D d.m" }}</div>
+                    <div class="compact-slider">
+                        <div class="slider-track-compact">
+                            {% for block in blocks %}
+                                <div class="slider-segment-compact {% if block.slept %}slept{% endif %}"
+                                     {% if block.slept %}style="background: {{ button_gradient }};"{% endif %}></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="compact-duration">{{ sleep_time }}</div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 <script>
@@ -54,6 +53,9 @@ function navigateTo(monthStr) {
     const url = new URL(window.location.href);
     url.searchParams.set('month', monthStr);
     window.location.href = url.toString();
+}
+function navigateToDayView(dateStr) {
+    window.location.href = `/track/sleep/day/?start_date=${dateStr}`;
 }
 </script>
 </div>
