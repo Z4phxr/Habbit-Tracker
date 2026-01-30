@@ -51,9 +51,9 @@
                 </div>
 
                 <div class="scale-labels">
-                    <span class="scale-time">18:00</span>
-                    <span class="scale-time scale-middle">00:00</span>
-                    <span class="scale-time">06:00</span>
+                    <span class="scale-time">6PM</span>
+                    <span class="scale-time scale-middle">6AM</span>
+                    <span class="scale-time">6PM</span>
                 </div>
 
                 <div class="duration-container">
@@ -107,9 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const last = blocks[sleptIdx[sleptIdx.length - 1]].label; // last block label
             const [fh, fm] = first.split(':').map(Number);
             const [lh, lm] = last.split(':').map(Number);
-            // Convert from midnight-based to noon-based slider position
+            // Convert from midnight-based clock time to slider position
             let startMidnight = fh * 60 + fm;
-            let endMidnight = ((lh + 1) % 24) * 60 + lm;
+            // End time: add 1 hour to last block to get the end time
+            let endMidnight = lh * 60 + lm + 60; // Add 60 minutes instead of doing (lh+1)*60
+            // Handle wrap-around past midnight
+            if (endMidnight >= 1440) {
+                endMidnight = endMidnight - 1440;
+            }
             startMin = convertMidnightToSlider(startMidnight);
             endMin = convertMidnightToSlider(endMidnight);
         }
@@ -330,7 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = monthNames.indexOf(monthStr);
         const baseDate = new Date(parseInt(year), month, parseInt(day));
 
-        // Convert slider positions to actual times
         const startMidnight = convertSliderToMidnight(startMin);
         const endMidnight = convertSliderToMidnight(endMin);
 
@@ -345,10 +349,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return d;
         }
 
+        // Determine if times cross into next day
+        // The slider represents 18:00 on baseDate to 18:00 on baseDate+1
+        // Times from 00:00-17:59 (clock) are considered same calendar day as baseDate
+        // Only times that wrap from evening->morning need day increment
+        
         const startDate = dateFromMinutes(baseDate, startMidnight, false);
-        // End is next day if slider position is past midnight (>= 360 minutes from 18:00)
-        const midnightOffset = TRACK_LENGTH_MIN - START_OFFSET; // 360 minutes
-        const endDate = dateFromMinutes(baseDate, endMidnight, endMin >= midnightOffset);
+        let endDate = dateFromMinutes(baseDate, endMidnight, false);
+        
+        // If end position is before start position on slider, end wraps to next day
+        if (endMin < startMin) {
+            endDate.setDate(endDate.getDate() + 1);
+        }
+        // If start is in evening (before midnight on slider) and end is in morning (after midnight), add day to end
+        else if (startMin < (TRACK_LENGTH_MIN - START_OFFSET) && endMin >= (TRACK_LENGTH_MIN - START_OFFSET)) {
+            endDate.setDate(endDate.getDate() + 1);
+        }
 
         const payload = { start: toLocalISOString(startDate), end: toLocalISOString(endDate) };
 
