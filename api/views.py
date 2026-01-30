@@ -48,6 +48,7 @@ import json
 from django.http import JsonResponse
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import make_aware, get_current_timezone
+from django.utils import timezone as django_timezone
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -167,8 +168,9 @@ def sleep_log_create(request):
     Create a new sleep log for authenticated user. Always adds, does not replace.
     """
     data = json.loads(request.body)
-    start = make_aware(datetime.strptime(data['start'], "%Y-%m-%dT%H:%M:%S.%fZ"), get_current_timezone())
-    end = make_aware(datetime.strptime(data['end'], "%Y-%m-%dT%H:%M:%S.%fZ"), get_current_timezone())
+    # Parse ISO datetime strings with Z suffix (UTC)
+    start = parse_datetime(data['start'])
+    end = parse_datetime(data['end'])
     log = SleepLog.objects.create(user=request.user, start=start, end=end)
     duration = (end - start).total_seconds() / 3600
     return Response({'id': log.id, 'duration': duration}, status=status.HTTP_201_CREATED)
