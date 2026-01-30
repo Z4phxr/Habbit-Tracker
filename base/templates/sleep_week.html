@@ -22,30 +22,32 @@
         <img src="{% static 'images/arrow_r.png' %}" alt="Next week" class="nav-arrow" onclick="navigateTo('{{ next_start|date:'Y-m-d' }}')" />
     </div>
     <div class="sleep-timeline-container">
-        <table class="week-table">
-            <thead>
-                <tr>
-                    <th></th>
-                    {% for hour in hour_labels %}
-                        <th class="hour-label">{{ hour }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for day, blocks, sleep_time in zipped_days_blocks %}
-                    <tr>
-                        <td class="day-label">{{ day|date:"D, d.m" }}</td>
-                        {% for block in blocks %}
-                            <td>
-                                <div class="block {% if block.slept %}slept{% endif %}"
+        <div class="sleep-compact-view">
+            <div class="sleep-hour-line">
+                <div class="hour-line-spacer"></div>
+                <div class="hour-line-labels">
+                    <span class="hour-line-label">18:00</span>
+                    <span class="hour-line-label hour-line-middle">00:00</span>
+                    <span class="hour-line-label">06:00</span>
+                </div>
+                <div class="hour-line-spacer-right"></div>
+            </div>
+            
+            {% for day, blocks, sleep_time in zipped_days_blocks %}
+                <div class="sleep-compact-row">
+                    <div class="compact-date">{{ day|date:"D d.m" }}</div>
+                    <div class="compact-slider">
+                        <div class="slider-track-compact">
+                            {% for block in blocks %}
+                                <div class="slider-segment-compact {% if block.slept %}slept{% endif %}"
                                      {% if block.slept %}style="background: {{ button_gradient }};"{% endif %}></div>
-                            </td>
-                        {% endfor %}
-                        <td>{{ sleep_time }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="compact-duration">{{ sleep_time }}</div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 <script>
