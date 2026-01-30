@@ -338,13 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const startMidnight = convertSliderToMidnight(startMin);
         const endMidnight = convertSliderToMidnight(endMin);
 
-        function dateFromMinutes(base, midnightMins, isNextDay) {
-            const d = new Date(base);
+        function dateFromMinutesUTC(base, midnightMins, isNextDay) {
+            // Create UTC date directly to avoid timezone conversion issues
+            const d = new Date(Date.UTC(base.getFullYear(), base.getMonth(), base.getDate()));
             const h = Math.floor(midnightMins / 60) % 24;
             const m = midnightMins % 60;
-            d.setHours(h, m, 0, 0);
+            d.setUTCHours(h, m, 0, 0);
             if (isNextDay) {
-                d.setDate(d.getDate() + 1);
+                d.setUTCDate(d.getUTCDate() + 1);
             }
             return d;
         }
@@ -354,16 +355,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Times from 00:00-17:59 (clock) are considered same calendar day as baseDate
         // Only times that wrap from evening->morning need day increment
         
-        const startDate = dateFromMinutes(baseDate, startMidnight, false);
-        let endDate = dateFromMinutes(baseDate, endMidnight, false);
+        const startDate = dateFromMinutesUTC(baseDate, startMidnight, false);
+        let endDate = dateFromMinutesUTC(baseDate, endMidnight, false);
         
         // If end position is before start position on slider, end wraps to next day
         if (endMin < startMin) {
-            endDate.setDate(endDate.getDate() + 1);
+            endDate.setUTCDate(endDate.getUTCDate() + 1);
         }
         // If start is in evening (before midnight on slider) and end is in morning (after midnight), add day to end
         else if (startMin < (TRACK_LENGTH_MIN - START_OFFSET) && endMin >= (TRACK_LENGTH_MIN - START_OFFSET)) {
-            endDate.setDate(endDate.getDate() + 1);
+            endDate.setUTCDate(endDate.getUTCDate() + 1);
         }
 
         const payload = { start: startDate.toISOString(), end: endDate.toISOString() };

@@ -186,6 +186,7 @@ def sleep_tracker(request):
 def sleep_tracker_week(request):
     """
     Track sleep for authenticated user only - week view.
+    Shows nights labeled by wake-up date.
     """
     background_image, button_gradient = get_background()
     motto = "Track your sleep"
@@ -202,8 +203,10 @@ def sleep_tracker_week(request):
     sleep_times = []
 
     # Aggregate sleep data for each day in the week
+    # Process the night before each display day (labeled by wake-up date)
     for day in week_days:
-        blocks, sleep_time, _ = process_day(day, request.user)
+        night_date = day - timedelta(days=1)
+        blocks, sleep_time, _ = process_day(night_date, request.user)
         week_blocks.append(blocks)
         sleep_times.append(sleep_time)
 
@@ -232,6 +235,7 @@ def sleep_tracker_week(request):
 def sleep_tracker_month(request):
     """
     Track sleep for authenticated user only - month view.
+    Shows nights labeled by wake-up date.
     """
     background_image, button_gradient = get_background()
 
@@ -250,8 +254,10 @@ def sleep_tracker_month(request):
     sleep_times = []
 
     # Aggregate sleep data for each day in the month
+    # Process the night before each display day (labeled by wake-up date)
     for day in all_days:
-        blocks, sleep_time, _ = process_day(day, request.user)
+        night_date = day - timedelta(days=1)
+        blocks, sleep_time, _ = process_day(night_date, request.user)
         blocks_list.append(blocks)
         sleep_times.append(sleep_time)
 
