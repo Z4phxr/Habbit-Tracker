@@ -35,7 +35,7 @@
             
             {% for day, blocks, sleep_time in zipped_days_blocks %}
                 <div class="sleep-compact-row">
-                    <div class="compact-date">{{ day|date:"D d.m" }}</div>
+                    <div class="compact-date" onclick="navigateToDayView('{{ day|date:'Y-m-d' }}')">{{ day|date:"D d.m" }}</div>
                     <div class="compact-slider">
                         <div class="slider-track-compact">
                             {% for block in blocks %}
@@ -55,6 +55,9 @@
         const url = new URL(window.location.href);
         url.searchParams.set('week', dateStr);
         window.location.href = url.toString();
+    }
+    function navigateToDayView(dateStr) {
+        window.location.href = `/track/sleep/day/?start_date=${dateStr}`;
     }
 </script>
 </div>
