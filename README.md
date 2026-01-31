@@ -20,6 +20,7 @@ Habit Tracker helps you monitor your daily habits, sleep quality, and mood over 
 - 🔌 **REST API** - Integrate with other tools
 
 
+
 ## 🚀 Live demo
 
 The application is deployed on Railway:
@@ -80,12 +81,9 @@ DELETE /api/mood/{id}/   # Delete entry
 The following improvements and new features are planned for future releases:
 
 - **Statistics Dashboard**: Visual summaries and charts for habits, sleep, and mood trends over time.
-- **Direct Day Navigation**: Click on a day in week/month views to jump directly to the detailed day view.
 - **Advanced Filtering**: Filter habits, sleep, and mood logs by tags, categories, or custom time ranges.
 - **Mobile-Friendly UI**: Enhanced mobile layout and touch interactions for easier use on phones and tablets.
 - **Export/Import Data**: Download your logs as CSV/Excel or import data from other sources.
-- **User Accounts**: Multi-user support with authentication and personalized data.
-- **Dark Mode**: Optional dark theme for better night-time usability.
 - **Customizable Color Schemes**: User-selectable themes and color palettes for blocks and backgrounds.
 - **Habit Streaks & Achievements**: Visual indicators for streaks and motivational badges.
 - **Notes & Comments**: Add notes or comments to any log entry for more context.
