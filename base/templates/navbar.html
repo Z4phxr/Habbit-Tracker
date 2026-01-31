@@ -14,10 +14,17 @@
                 <a href="{% url 'tracker' section='mood' period='week' %}" class="navbar-link navbar-mood {% if active_section == 'mood' %}active{% endif %}" style="background: {{ button_gradient }};">😌 Mood</a>
                 <a href="{% url 'edit_habits' %}" class="navbar-link navbar-edit {% if request.resolver_match.url_name == 'edit_habits' %}active{% endif %}" style="background: {{ button_gradient }};">✏️ Edit</a>
                 <a href="{% url 'logout' %}" class="navbar-link navbar-logout" style="background: {{ button_gradient }};">🚪 Logout</a>
+                <button id="theme-toggle" class="navbar-link theme-toggle-btn" aria-label="Toggle theme" title="Toggle Dark Mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
             {% else %}
                 <a href="{% url 'login' %}" class="navbar-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}" style="background: {{ button_gradient }};">Login</a>
                 <a href="{% url 'register' %}" class="navbar-link navbar-register {% if request.resolver_match.url_name == 'register' %}active{% endif %}" style="background: {{ button_gradient }};">Register</a>
+                <button id="theme-toggle" class="navbar-link theme-toggle-btn" aria-label="Toggle theme" title="Toggle Dark Mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
             {% endif %}
         </div>
     </div>
 </nav>
+<script src="{% static 'theme-toggle.js' %}"></script>
